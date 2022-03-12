@@ -10,6 +10,7 @@
 #include <CGAL/Polygon_mesh_processing/polygon_mesh_to_polygon_soup.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 #include <CGAL/Polygon_mesh_processing/remesh.h>
+#include <CGAL/Polygon_mesh_processing/fair.h>
 #include <CGAL/Surface_mesh/IO/PLY.h>
 #include <CGAL/Surface_mesh/IO/OFF.h>
 
@@ -261,6 +262,14 @@ void init_mesh(py::module &m) {
             VertexPointMapWrapper point_map = VertexPointMapWrapper(points, touched);
             auto params = PMP::parameters::number_of_iterations(n_iter).vertex_point_map(point_map);
             PMP::isotropic_remeshing(faces, target_edge_length, mesh, params);
+        })
+        .def("fair", [](Mesh& mesh, const std::vector<V>& verts, unsigned int continuity) {
+            // A value controling the tangential continuity of the output surface patch.
+            // The possible values are 0, 1 and 2, refering to the C0, C1 and C2 continuity.
+            bool success = PMP::fair(mesh, verts, PMP::parameters::fairing_continuity(continuity));
+            if (!success) {
+                throw std::runtime_error("Fairing failed");
+            }
         })
     ;
 }
