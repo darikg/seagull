@@ -120,3 +120,4 @@ ENV/
 # Spyder project settings
 .spyderproject
 
+/.vs/**
