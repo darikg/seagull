@@ -38,6 +38,12 @@ if conda_prefix:
     if not os.path.exists(cgal_include):
         cgal_include = os.path.join(conda_prefix, 'Library', 'include', 'CGAL')
         include_dirs.append(os.path.join(conda_prefix, 'Library', 'include'))
+
+    eigen_include = os.path.join(conda_prefix, 'include', 'eigen3')
+    if not os.path.exists(eigen_include):
+        eigen_include = os.path.join(conda_prefix, 'Library', 'include', 'eigen3')
+    include_dirs.append(eigen_include)
+
 elif os.path.exists('/usr/include/CGAL/'):
     cgal_include = '/usr/include/CGAL/'
 else:
@@ -195,6 +201,7 @@ class BuildExt(build_ext):
         ct = self.compiler.compiler_type
         opts = self.c_opts.get(ct, [])
         link_opts = self.l_opts.get(ct, [])
+
         if ct == 'unix':
             opts.append('-DVERSION_INFO="%s"' % self.distribution.get_version())
             opts.append(cpp_flag(self.compiler))
@@ -204,6 +211,7 @@ class BuildExt(build_ext):
         elif ct == 'msvc':
             opts.append('/DVERSION_INFO=\\"%s\\"' % self.distribution.get_version())
             opts.append('/DCGAL_DEBUG=1')
+            # opts.append(r'/DEIGEN3_INCLUDE_DIR="C:\Users\14436\miniconda3\envs\cskg\Library\include\eigen3"')
         for ext in self.extensions:
             ext.extra_compile_args = opts
             ext.extra_link_args = link_opts
