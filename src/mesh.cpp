@@ -9,6 +9,7 @@
 #include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
 #include <CGAL/Polygon_mesh_processing/polygon_mesh_to_polygon_soup.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
+#include <CGAL/Polygon_mesh_processing/remesh.h>
 #include <CGAL/Surface_mesh/IO/PLY.h>
 #include <CGAL/Surface_mesh/IO/OFF.h>
 
@@ -64,6 +65,26 @@ void set_property_values(
         pmap[keys[i]] = vals[i];
     }
 }
+
+struct VertexPointMapWrapper {
+    // Used for tracking which verts get moved during remesh, etc
+    using key_type = V;
+    using value_type = Point_3;
+    using reference = Point_3&;
+    using category = boost::read_write_property_map_tag;
+
+    Mesh::Property_map<V, Point_3>& points;
+    Mesh::Property_map<V, bool>& touched;
+
+    VertexPointMapWrapper(Mesh::Property_map<V, Point_3>& p, Mesh::Property_map<V, bool>& t) : points(p), touched(t) {}
+
+    friend Point_3 get (const VertexPointMapWrapper& map, V v) {return map.points[v];}
+    friend void put (const VertexPointMapWrapper& map, V v, const Point_3& point) {
+        map.points[v] = point;
+        map.touched[v] = true;
+    }
+};
+
 
 void init_mesh(py::module &m) {
     py::class_<V>(m, "Vertex");
@@ -213,6 +234,16 @@ void init_mesh(py::module &m) {
                 throw std::runtime_error("writing failed");
             }
         })
-    ;
 
+        .def("remesh", [](Mesh& mesh, const std::vector<F>& faces, double target_edge_length, unsigned int n_iter) {
+            PMP::isotropic_remeshing(faces, target_edge_length, mesh);
+        })
+        .def("remesh", [](Mesh& mesh, const std::vector<F>& faces, double target_edge_length, unsigned int n_iter,
+                          Mesh::Property_map<V, bool>& touched) {
+            auto points = mesh.points();
+            VertexPointMapWrapper point_map = VertexPointMapWrapper(points, touched);
+            auto params = PMP::parameters::number_of_iterations(n_iter).vertex_point_map(point_map);
+            PMP::isotropic_remeshing(faces, target_edge_length, mesh, params);
+        })
+    ;
 }
