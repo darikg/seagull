@@ -320,8 +320,20 @@ void init_mesh(py::module &m) {
             }
             return result;
         })
+        .def("union", [](
+                Mesh& mesh1, Mesh::Property_map<V, ssize_t>& vert_ids1, Mesh::Property_map<E, bool> ecm1,
+                Mesh& mesh2, Mesh::Property_map<V, ssize_t>& vert_ids2, Mesh::Property_map<E, bool> ecm2) {
+
+            CorefinementVisitor visitor(mesh1, mesh2, vert_ids1, vert_ids2);
+            auto params1 = PMP::parameters::visitor(visitor).edge_is_constrained_map(ecm1);
+            auto params2 = PMP::parameters::edge_is_constrained_map(ecm2);
+            bool success = PMP::corefine_and_compute_difference(mesh1, mesh2, mesh1);
+            if (!success) {
+                throw std::runtime_error("Boolean operation failed.");
+            }
+        })
         .def("intersection", [](Mesh& mesh1, Mesh& mesh2) {
-            Mesh result;
+            Mesh result;                        //TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! copy paste mistake
             bool success = CGAL::Polygon_mesh_processing::corefine_and_compute_union(mesh1, mesh2, result);
             if (!success) {
                 throw std::runtime_error("Boolean operation failed.");
@@ -365,7 +377,7 @@ void init_mesh(py::module &m) {
         .def("refine", [](Mesh& mesh, const std::vector<F>& faces, double density) {
             std::vector<V> new_verts;
             std::vector<F> new_faces;
-            auto params =  PMP::parameters::density_control_factor(density);
+            auto params = PMP::parameters::density_control_factor(density);
             PMP::refine(mesh, faces, std::back_inserter(new_faces), std::back_inserter(new_verts), params);
             return std::make_tuple(new_verts, new_faces);
         })
