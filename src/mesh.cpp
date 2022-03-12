@@ -90,6 +90,21 @@ void init_mesh(py::module &m) {
     py::class_<V>(m, "Vertex");
     py::class_<F>(m, "Face");
 
+    py::class_<Mesh::Property_map<V, bool> >(m, "VertexBoolProperty")
+        .def("__getitem__", [](const Mesh::Property_map<V, bool> pmap, const V& vert) {
+            return get_property_value(pmap, vert);
+        })
+        .def("__getitem__", [](const Mesh::Property_map<V, bool> pmap, const std::vector<V>& verts) {
+            return get_property_values(pmap, verts);
+        })
+        .def("__setitem__", [](Mesh::Property_map<V, bool>& pmap, const V& vert, const bool val) {
+            set_property_value(pmap, vert, val);
+        })
+        .def("__setitem__", [](Mesh::Property_map<V, bool>& pmap, const std::vector<V>& verts, const std::vector<bool>& vals) {
+            set_property_values(pmap, verts, vals);
+        })
+    ;
+
     py::class_<Mesh::Property_map<V, ssize_t> >(m, "VertexIntProperty")
         .def("__getitem__", [](const Mesh::Property_map<V, ssize_t> pmap, const V& vert) {
             return get_property_value(pmap, vert);
@@ -190,7 +205,9 @@ void init_mesh(py::module &m) {
             return faces;
         })
 
+        .def("add_vertex_property", &add_property_map<V, bool>)
         .def("add_vertex_property", &add_property_map<V, ssize_t>)
+
 
         .def("corefine", [](Mesh& mesh1, Mesh& mesh2){
             PMP::corefine(mesh1, mesh2);

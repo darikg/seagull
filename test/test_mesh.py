@@ -64,3 +64,21 @@ def test_binary_op(op):
     m1 = Mesh(*tetrahedron(scale=0.9, rot_z=pi / 3), True)
     result = getattr(m0, op)(m1)
     assert isinstance(result, Mesh)
+
+
+def test_remesh_simple(mesh):
+    nv0 = mesh.n_vertices
+    mesh.remesh(mesh.faces[:2], 0.5, 1)
+    assert mesh.n_vertices > nv0
+
+
+def test_remesh_tracked(mesh):
+    nv0 = mesh.n_vertices
+    touched = mesh.add_vertex_property('touched', False)
+    mesh.remesh(mesh.faces[:2], 0.5, 1, touched)
+    assert mesh.n_vertices > nv0
+    is_touched = touched[mesh.vertices]
+    assert is_touched.any()
+    assert ~is_touched.all()
+
+
