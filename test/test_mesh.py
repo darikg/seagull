@@ -81,7 +81,6 @@ def test_corefine_tracked():
         assert ecm[m.edges].any()
 
 
-
 @pytest.mark.parametrize('op', ['difference', 'union', 'intersection'])
 def test_binary_op(op):
     m0 = Mesh(*tetrahedron(), True)

@@ -272,6 +272,26 @@ void init_mesh(py::module &m) {
         // .def("add_vertex_property", &add_property_map<V, size_t>)
         .def("add_edge_property", &add_property_map<E, bool>)
 
+        .def("edge_vertices", [](const Mesh& mesh, const std::vector<E>& edges) {
+            std::map<V, size_t> vert_idxs;
+            size_t vi = 0;
+            for (V v : mesh.vertices()) {
+                vert_idxs[v] = vi;
+                vi++;
+            }
+
+            const size_t ne = edges.size();
+            py::array_t<size_t, py::array::c_style> verts({ne, size_t(2)});
+            auto r = verts.mutable_unchecked<2>();
+            for (size_t i = 0; i < ne; i++) {
+                for (size_t j = 0; j < 2; j++) {
+                    r(i, j) = vert_idxs[mesh.vertex(edges[i], j)];
+                }
+            }
+
+            return verts;
+        })
+
         .def("corefine", [](Mesh& mesh1, Mesh& mesh2){
             PMP::corefine(mesh1, mesh2);
         })
