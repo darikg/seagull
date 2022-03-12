@@ -11,6 +11,10 @@
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 #include <CGAL/Polygon_mesh_processing/remesh.h>
 #include <CGAL/Polygon_mesh_processing/fair.h>
+#include <CGAL/Polygon_mesh_processing/smooth_mesh.h>
+#include <CGAL/Polygon_mesh_processing/smooth_shape.h>
+#include <CGAL/Polygon_mesh_processing/refine.h>
+
 #include <CGAL/Surface_mesh/IO/PLY.h>
 #include <CGAL/Surface_mesh/IO/OFF.h>
 
@@ -270,6 +274,17 @@ void init_mesh(py::module &m) {
             if (!success) {
                 throw std::runtime_error("Fairing failed");
             }
+        })
+        .def("refine", [](Mesh& mesh, const std::vector<F>& faces, double density) {
+            std::vector<V> new_verts;
+            std::vector<F> new_faces;
+            auto params =  PMP::parameters::density_control_factor(density);
+            PMP::refine(mesh, faces, std::back_inserter(new_faces), std::back_inserter(new_verts), params);
+            return std::make_tuple(new_verts, new_faces);
+        })
+        .def("smooth_mesh", [](Mesh& mesh, const std::vector<F>& faces, unsigned int n_iter, bool use_safety_constraints) {
+            auto params = PMP::parameters::number_of_iterations(n_iter).use_safety_constraints(use_safety_constraints);
+            PMP::smooth_mesh(faces, mesh, params);
         })
     ;
 }
