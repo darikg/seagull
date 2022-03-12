@@ -21,6 +21,8 @@
 typedef CGAL::Surface_mesh<Point_3>                                 Mesh;
 typedef Mesh::Vertex_index                                          V;
 typedef Mesh::Face_index                                            F;
+typedef Mesh::Halfedge_index                                        H;
+typedef Mesh::Edge_index                                            E;
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 
@@ -90,12 +92,43 @@ struct VertexPointMapWrapper {
     }
 };
 
+struct CorefinementVisitor : public PMP::Corefinement::Default_visitor<Mesh> {
+    // Used for tracking for refinement indices
+    // CGAL's corefine only uses a visitor for the first mesh, so we need the references to both
+    // here to tell which is which
+    Mesh& mesh1;
+    Mesh& mesh2;
+    Mesh::Property_map<V, ssize_t>& vert_ids1;
+    Mesh::Property_map<V, ssize_t>& vert_ids2;
+
+    CorefinementVisitor(
+        Mesh& m1, Mesh& m2, Mesh::Property_map<V, ssize_t>& v1, Mesh::Property_map<V, ssize_t>& v2
+    ) : mesh1(m1), mesh2(m2), vert_ids1(v1), vert_ids2(v2) {}
+
+    void new_vertex_added(size_t i_id, V v, const Mesh& mesh) {
+        // Called when a new vertex is added in the mesh
+        // (either an edge split or a vertex inserted in the interior of a face).
+        // i_id is the intersection point id reported in new_node_added.
+        // For each mesh, a vertex with a given id will be reported exactly once,
+        // except if it is already an existing vertex.
+        if (&mesh == &mesh1) {
+            vert_ids1[v] = size_t(i_id);
+        } else {
+            vert_ids2[v] = size_t(i_id);
+        }
+    }
+};
+
 
 void init_mesh(py::module &m) {
-    py::class_<V>(m, "Vertex");
-    py::class_<F>(m, "Face");
+    py::module sub = m.def_submodule("surface_mesh");
 
-    py::class_<Mesh::Property_map<V, bool> >(m, "VertexBoolProperty")
+    py::class_<V>(sub, "Vertex");
+    py::class_<F>(sub, "Face");
+    py::class_<E>(sub, "Edge");
+    py::class_<H>(sub, "Halfedge");
+
+    py::class_<Mesh::Property_map<V, bool>>(sub, "VertexBoolProperty")
         .def("__getitem__", [](const Mesh::Property_map<V, bool> pmap, const V& vert) {
             return get_property_value(pmap, vert);
         })
@@ -110,7 +143,7 @@ void init_mesh(py::module &m) {
         })
     ;
 
-    py::class_<Mesh::Property_map<V, ssize_t> >(m, "VertexIntProperty")
+    py::class_<Mesh::Property_map<V, ssize_t>>(sub, "VertexIntProperty")
         .def("__getitem__", [](const Mesh::Property_map<V, ssize_t> pmap, const V& vert) {
             return get_property_value(pmap, vert);
         })
@@ -125,7 +158,22 @@ void init_mesh(py::module &m) {
         })
     ;
 
-    py::class_<Mesh>(m, "Mesh")
+    py::class_<Mesh::Property_map<E, bool>>(sub, "EdgeBoolProperty")
+        .def("__getitem__", [](const Mesh::Property_map<E, bool> pmap, const E& edge) {
+            return get_property_value(pmap, edge);
+        })
+        .def("__getitem__", [](const Mesh::Property_map<E, bool> pmap, const std::vector<E>& edges) {
+            return get_property_values(pmap, edges);
+        })
+        .def("__setitem__", [](Mesh::Property_map<E, bool>& pmap, const E& edge, const bool val) {
+            set_property_value(pmap, edge, val);
+        })
+        .def("__setitem__", [](Mesh::Property_map<E, bool>& pmap, const std::vector<E>& edges, const std::vector<bool>& vals) {
+            set_property_values(pmap, edges, vals);
+        })
+    ;
+
+    py::class_<Mesh>(sub, "Mesh")
         .def(py::init<>())
         .def(py::init([](const std::string& file) {
             Mesh mesh;
@@ -192,6 +240,7 @@ void init_mesh(py::module &m) {
 
         .def_property_readonly("n_vertices", [](const Mesh& mesh) { return mesh.number_of_vertices(); })
         .def_property_readonly("n_faces", [](const Mesh& mesh) { return mesh.number_of_faces(); })
+        .def_property_readonly("n_edges", [](const Mesh& mesh) { return mesh.number_of_edges(); })
 
         .def_property_readonly("vertices", [](const Mesh& mesh) {
             std::vector<V> verts;
@@ -209,13 +258,31 @@ void init_mesh(py::module &m) {
             }
             return faces;
         })
+        .def_property_readonly("edges", [](const Mesh& mesh) {
+            std::vector<E> edges;
+            edges.reserve(mesh.number_of_edges());
+            for (E e : mesh.edges()) {
+                edges.emplace_back(e);
+            }
+            return edges;
+        })
 
         .def("add_vertex_property", &add_property_map<V, bool>)
         .def("add_vertex_property", &add_property_map<V, ssize_t>)
-
+        // .def("add_vertex_property", &add_property_map<V, size_t>)
+        .def("add_edge_property", &add_property_map<E, bool>)
 
         .def("corefine", [](Mesh& mesh1, Mesh& mesh2){
             PMP::corefine(mesh1, mesh2);
+        })
+        .def("corefine", [](
+                Mesh& mesh1, Mesh::Property_map<V, ssize_t>& vert_ids1, Mesh::Property_map<E, bool> ecm1,
+                Mesh& mesh2, Mesh::Property_map<V, ssize_t>& vert_ids2, Mesh::Property_map<E, bool> ecm2) {
+
+            CorefinementVisitor visitor(mesh1, mesh2, vert_ids1, vert_ids2);
+            auto params1 = PMP::parameters::visitor(visitor).edge_is_constrained_map(ecm1);
+            auto params2 = PMP::parameters::edge_is_constrained_map(ecm2);
+            PMP::corefine(mesh1, mesh2, params1, params2);
         })
         .def("difference", [](Mesh& mesh1, Mesh& mesh2) {
             Mesh result;

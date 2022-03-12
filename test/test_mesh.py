@@ -2,10 +2,11 @@ import pytest
 import os
 
 from tempfile import TemporaryDirectory
-from numpy import array, cos, sin,  pi, ones, arange
+import numpy as np
+from numpy import array, cos, sin,  pi, ones, arange, uint64
 from numpy.testing import assert_array_equal
 
-from skgeom import Mesh
+from skgeom._skgeom.surface_mesh import Mesh
 
 
 def tetrahedron(scale=1.0, rot_z=0.0):
@@ -58,6 +59,29 @@ def test_corefine():
     m0.corefine(m1)
 
 
+def test_corefine_tracked():
+    m1 = Mesh(*tetrahedron(), True)
+    vert_ids1 = m1.add_vertex_property('corefined_idx', -1)
+    ecm1 = m1.add_edge_property('constrained', False)
+
+    m2 = Mesh(*tetrahedron(scale=0.9,  rot_z=pi/3), True)
+    vert_ids2 = m2.add_vertex_property('corefined_idx', -1)
+    ecm2 = m2.add_edge_property('constrained', False)
+    m1.corefine(vert_ids1, ecm1, m2, vert_ids2, ecm2)
+
+    # Corefined vert indices should match
+    v1, v2 = m1.vertices, m2.vertices
+    ci1, ci2 = vert_ids1[v1], vert_ids2[v2]
+    assert (ci1 > -1).any()
+    assert (ci2 > -1).any()
+    assert_array_equal(sorted(ci1[ci1 > -1]), sorted(ci2[ci2 > -1]))
+
+    # The intersection edges should've been marked as constrained
+    for (m, ecm) in zip((m1, m2), (ecm1, ecm2)):
+        assert ecm[m.edges].any()
+
+
+
 @pytest.mark.parametrize('op', ['difference', 'union', 'intersection'])
 def test_binary_op(op):
     m0 = Mesh(*tetrahedron(), True)
@@ -81,4 +105,7 @@ def test_remesh_tracked(mesh):
     assert is_touched.any()
     assert ~is_touched.all()
 
+
+def test_fair(mesh):
+    mesh.fair(mesh.vertices[:2], 0)
 
