@@ -341,7 +341,7 @@ void init_mesh(py::module &m) {
             CorefinementVisitor visitor(mesh1, mesh2, vert_ids1, vert_ids2);
             auto params1 = PMP::parameters::visitor(visitor).edge_is_constrained_map(ecm1);
             auto params2 = PMP::parameters::edge_is_constrained_map(ecm2);
-            bool success = PMP::corefine_and_compute_difference(mesh1, mesh2, mesh1);
+            bool success = PMP::corefine_and_compute_union(mesh1, mesh2, mesh1);
             if (!success) {
                 throw std::runtime_error("Boolean operation failed.");
             }
