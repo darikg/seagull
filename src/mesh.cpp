@@ -249,6 +249,7 @@ void init_mesh(py::module &m) {
             return std::make_tuple(verts_out, faces_out);
         })
 
+        .def_property_readonly("is_valid", [](const Mesh& mesh) { return mesh.is_valid(false); })
         .def_property_readonly("n_vertices", [](const Mesh& mesh) { return mesh.number_of_vertices(); })
         .def_property_readonly("n_faces", [](const Mesh& mesh) { return mesh.number_of_faces(); })
         .def_property_readonly("n_edges", [](const Mesh& mesh) { return mesh.number_of_edges(); })
