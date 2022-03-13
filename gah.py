@@ -21,16 +21,28 @@ def tetrahedron(scale=1.0, rot_z=0.0):
     return verts, faces
 
 
-m1 = Mesh(*tetrahedron(), True)
-vert_ids1 = m1.add_vertex_property('corefined_idx', -1)
-ecm1 = m1.add_edge_property('constrained', False)
+# m1 = Mesh(*tetrahedron(), True)
+# vert_ids1 = m1.add_vertex_property('corefined_idx', -1)
+# ecm1 = m1.add_edge_property('constrained', False)
+#
+# m2 = Mesh(*tetrahedron(scale=0.9, rot_z=pi / 3), True)
+# vert_ids2 = m2.add_vertex_property('corefined_idx', -1)
+# ecm2 = m2.add_edge_property('constrained', False)
+# m1.corefine(vert_ids1, ecm1, m2, vert_ids2, ecm2)
+#
+# e1, e2 = array(m1.edges), array(m2.edges)
+# ci1 = ecm1[e1]
+# print(m1.edge_vertices(e1[ci1]))
 
-m2 = Mesh(*tetrahedron(scale=0.9, rot_z=pi / 3), True)
-vert_ids2 = m2.add_vertex_property('corefined_idx', -1)
-ecm2 = m2.add_edge_property('constrained', False)
-m1.corefine(vert_ids1, ecm1, m2, vert_ids2, ecm2)
 
-e1, e2 = array(m1.edges), array(m2.edges)
-ci1 = ecm1[e1]
-print(m1.edge_vertices(e1[ci1]))
+def make_mesh():
+    m = Mesh(*tetrahedron(), True)
+    m.add_edge_property('corefined_idx', False)
+    return m
 
+
+mesh = make_mesh()
+# mesh = Mesh(*tetrahedron(), True)
+# pmap = mesh.add_edge_property('corefined_idx', False)
+pmap = mesh.get_edge_property('corefined_idx')
+print(pmap[mesh.edges])

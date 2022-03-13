@@ -38,6 +38,17 @@ Mesh::Property_map<Key, Val> add_property_map (Mesh& mesh, std::string name, con
 }
 
 template <typename Key, typename Val>
+Mesh::Property_map<Key, Val> get_property_map (Mesh& mesh, const std::string& name) {
+    Mesh::Property_map<Key, Val> pmap;
+    bool found;
+    std::tie(pmap, found) = mesh.property_map<Key, Val>(name);
+    if (!found) {
+        throw std::runtime_error("Property map " + name + " not found");
+    }
+    return pmap;
+}
+
+template <typename Key, typename Val>
 Val get_property_value(const Mesh::Property_map<Key, Val>& pmap, const Key& key) {
     return pmap[key];
 }
@@ -268,9 +279,11 @@ void init_mesh(py::module &m) {
         })
 
         .def("add_vertex_property", &add_property_map<V, bool>)
+        .def("get_vertex_property", &get_property_map<V, bool>)
         .def("add_vertex_property", &add_property_map<V, ssize_t>)
-        // .def("add_vertex_property", &add_property_map<V, size_t>)
+        .def("get_vertex_property", &get_property_map<V, ssize_t>)
         .def("add_edge_property", &add_property_map<E, bool>)
+        .def("get_edge_property", &get_property_map<E, bool>)
 
         .def("edge_vertices", [](const Mesh& mesh, const std::vector<E>& edges) {
             std::map<V, size_t> vert_idxs;
