@@ -169,6 +169,21 @@ void init_mesh(py::module &m) {
         })
     ;
 
+    py::class_<Mesh::Property_map<F, bool>>(sub, "FaceBoolProperty")
+        .def("__getitem__", [](const Mesh::Property_map<F, bool> pmap, const F& face) {
+            return get_property_value(pmap, face);
+        })
+        .def("__getitem__", [](const Mesh::Property_map<F, bool> pmap, const std::vector<F>& faces) {
+            return get_property_values(pmap, faces);
+        })
+        .def("__setitem__", [](Mesh::Property_map<F, bool>& pmap, const F& face, const bool val) {
+            set_property_value(pmap, face, val);
+        })
+        .def("__setitem__", [](Mesh::Property_map<F, bool>& pmap, const std::vector<F>& faces, const std::vector<bool>& vals) {
+            set_property_values(pmap, faces, vals);
+        })
+    ;
+
     py::class_<Mesh::Property_map<E, bool>>(sub, "EdgeBoolProperty")
         .def("__getitem__", [](const Mesh::Property_map<E, bool> pmap, const E& edge) {
             return get_property_value(pmap, edge);
@@ -283,6 +298,8 @@ void init_mesh(py::module &m) {
         .def("get_vertex_property", &get_property_map<V, bool>)
         .def("add_vertex_property", &add_property_map<V, ssize_t>)
         .def("get_vertex_property", &get_property_map<V, ssize_t>)
+        .def("add_face_property", &add_property_map<F, bool>)
+        .def("get_face_property", &get_property_map<F, bool>)
         .def("add_edge_property", &add_property_map<E, bool>)
         .def("get_edge_property", &get_property_map<E, bool>)
 
