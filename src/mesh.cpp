@@ -123,9 +123,9 @@ struct CorefinementVisitor : public PMP::Corefinement::Default_visitor<Mesh> {
         // For each mesh, a vertex with a given id will be reported exactly once,
         // except if it is already an existing vertex.
         if (&mesh == &mesh1) {
-            vert_ids1[v] = size_t(i_id);
+            vert_ids1[v] = ssize_t(i_id);
         } else {
-            vert_ids2[v] = size_t(i_id);
+            vert_ids2[v] = ssize_t(i_id);
         }
     }
 };
