@@ -294,6 +294,9 @@ void init_mesh(py::module &m) {
             return edges;
         })
 
+        .def_property_readonly("vertex_properties", &Mesh::properties<V>)
+        .def_property_readonly("face_properties", &Mesh::properties<F>)
+
         .def("add_vertex_property", &add_property_map<V, bool>)
         .def("get_vertex_property", &get_property_map<V, bool>)
         .def("add_vertex_property", &add_property_map<V, ssize_t>)
