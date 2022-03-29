@@ -488,10 +488,23 @@ void init_mesh(py::module &m) {
 
             return expanded;
         })
-        .def("fair", [](Mesh3& mesh, const std::vector<V3>& verts, unsigned int continuity) {
+        .def("fair", [](Mesh3& mesh, const std::vector<V3>& verts, const py::kwargs& kwargs) {
             // A value controling the tangential continuity of the output surface patch.
             // The possible values are 0, 1 and 2, refering to the C0, C1 and C2 continuity.
-            bool success = PMP::fair(mesh, verts, PMP::parameters::fairing_continuity(continuity));
+            auto params = PMP::parameters::all_default();
+
+            for (auto item : kwargs) {
+                // auto key = item.first.cast<std::string>();
+                auto key = py::cast<std::string>(item.first);
+
+                if (key.compare("fairing_continuity")) {
+                    //params.fairing_continuity(item.second.cast<unsigned int>());
+                    params.fairing_continuity(py::cast<unsigned int>(item.second));
+                }
+            }
+
+            // bool success = PMP::fair(mesh, verts, PMP::parameters::fairing_continuity(continuity));
+            bool success = PMP::fair(mesh, verts, params);
             if (!success) {
                 throw std::runtime_error("Fairing failed");
             }

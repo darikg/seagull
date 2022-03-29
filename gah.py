@@ -1,4 +1,3 @@
-import pytest
 import os
 
 from tempfile import TemporaryDirectory
@@ -42,7 +41,10 @@ def make_mesh():
 
 
 mesh = make_mesh()
-print(mesh.expand_selection(mesh.vertices[:2]))
+mesh.fair(mesh.vertices[:2])
+mesh.fair(mesh.vertices[:2], fairing_continuity=1)
+mesh.fair(mesh.vertices[:2], fairing_continuity=5)
+# print(mesh.expand_selection(mesh.vertices[:2]))
 # tree = mesh.aabb_tree()
 # face_idx, bary_coords = mesh.locate_with_aabb_tree(tree, zeros((1, 3)))
 # # mesh = Mesh(*tetrahedron(), True)
