@@ -46,7 +46,7 @@ void define_property_map(py::module &m, std::string name) {
     ;
 }
 
-template<typename Mesh, typename Point, typename V, typename F, typename E, typename H>
+template<typename Mesh, typename V, typename F, typename E, typename H>
 void define_mesh_properties(py::module &m, std::string name) {
     define_property_map<Mesh, V, bool>(m, "VertBoolPropertyMap" + name);
     define_property_map<Mesh, V, ssize_t>(m, "VertIntPropertyMap" + name);
