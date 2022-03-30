@@ -404,8 +404,7 @@ void init_mesh(py::module &m) {
     });
 
     // Don't really understand how pybind11, typedefs, and templates interact here
-    // But these serve as both Mesh3 and Mesh2 indices, so don't need to redefine
-    // them for Mesh2
+    // But these serve as both Mesh3 and Mesh2 indices, so don't need to redefine them for Mesh2
     py::class_<V3>(sub, "Vertex");
     py::class_<F3>(sub, "Face");
     py::class_<E3>(sub, "Edge");
