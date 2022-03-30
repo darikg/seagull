@@ -1,5 +1,4 @@
 #include "skgeom.hpp"
-#include "funcs.hpp"
 
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
