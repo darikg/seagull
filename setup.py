@@ -115,6 +115,7 @@ ext_modules = [
             'src/skgeom.cpp',
             'src/mesh.cpp',
             'src/properties.cpp',
+            'src/corefine.cpp',
         ],
         include_dirs=include_dirs,
         library_dirs=library_dirs,

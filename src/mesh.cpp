@@ -2,7 +2,6 @@
 
 #include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
 #include <CGAL/Polygon_mesh_processing/polygon_mesh_to_polygon_soup.h>
-#include <CGAL/Polygon_mesh_processing/corefinement.h>
 #include <CGAL/Polygon_mesh_processing/remesh.h>
 #include <CGAL/Polygon_mesh_processing/fair.h>
 #include <CGAL/Polygon_mesh_processing/smooth_mesh.h>
@@ -22,7 +21,6 @@
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 typedef PMP::Barycentric_coordinates<Kernel::FT>    Barycentric_coordinates;
-
 typedef PMP::Face_location<Mesh3, Kernel::FT>       Loc3;
 
 typedef typename CGAL::AABB_face_graph_triangle_primitive<Mesh3>    AABB_primitive3;
@@ -141,32 +139,6 @@ struct VertexPointMapWrapper {
     }
 };
 
-struct CorefinementVisitor : public PMP::Corefinement::Default_visitor<Mesh3> {
-    // Used for tracking for refinement indices
-    // CGAL's corefine only uses a visitor for the first mesh, so we need the references to both
-    // here to tell which is which
-    Mesh3& mesh1;
-    Mesh3& mesh2;
-    Mesh3::Property_map<V3, ssize_t>& vert_ids1;
-    Mesh3::Property_map<V3, ssize_t>& vert_ids2;
-
-    CorefinementVisitor(
-        Mesh3& m1, Mesh3& m2, Mesh3::Property_map<V3, ssize_t>& v1, Mesh3::Property_map<V3, ssize_t>& v2
-    ) : mesh1(m1), mesh2(m2), vert_ids1(v1), vert_ids2(v2) {}
-
-    void new_vertex_added(size_t i_id, V3 v, const Mesh3& mesh) {
-        // Called when a new vertex is added in the mesh
-        // (either an edge split or a vertex inserted in the interior of a face).
-        // i_id is the intersection point id reported in new_node_added.
-        // For each mesh, a vertex with a given id will be reported exactly once,
-        // except if it is already an existing vertex.
-        if (&mesh == &mesh1) {
-            vert_ids1[v] = ssize_t(i_id);
-        } else {
-            vert_ids2[v] = ssize_t(i_id);
-        }
-    }
-};
 
 typedef CGAL::Triple<size_t, size_t, size_t> Triangle;
 
@@ -447,54 +419,6 @@ void init_mesh(py::module &m) {
         .def("smooth_shape", [](Mesh3& mesh, const std::vector<F3>& faces, const double time, unsigned int n_iter) {
             auto params = PMP::parameters::number_of_iterations(n_iter);
             PMP::smooth_shape(faces, mesh, time, params);
-        })
-        .def("corefine", [](Mesh3& mesh1, Mesh3& mesh2){
-            PMP::corefine(mesh1, mesh2);
-        })
-        .def("corefine", [](
-                Mesh3& mesh1, Mesh3::Property_map<V3, ssize_t>& vert_ids1, Mesh3::Property_map<E3, bool> ecm1,
-                Mesh3& mesh2, Mesh3::Property_map<V3, ssize_t>& vert_ids2, Mesh3::Property_map<E3, bool> ecm2) {
-
-            CorefinementVisitor visitor(mesh1, mesh2, vert_ids1, vert_ids2);
-            auto params1 = PMP::parameters::visitor(visitor).edge_is_constrained_map(ecm1);
-            auto params2 = PMP::parameters::edge_is_constrained_map(ecm2);
-            PMP::corefine(mesh1, mesh2, params1, params2);
-        })
-        .def("difference", [](Mesh3& mesh1, Mesh3& mesh2) {
-            Mesh3 result;
-            bool success = PMP::corefine_and_compute_difference(mesh1, mesh2, result);
-            if (!success) {
-                throw std::runtime_error("Boolean operation failed.");
-            }
-            return result;
-        })
-        .def("union", [](Mesh3& mesh1, Mesh3& mesh2) {
-            Mesh3 result;
-            bool success = PMP::corefine_and_compute_union(mesh1, mesh2, result);
-            if (!success) {
-                throw std::runtime_error("Boolean operation failed.");
-            }
-            return result;
-        })
-        .def("union", [](
-                Mesh3& mesh1, Mesh3::Property_map<V3, ssize_t>& vert_ids1, Mesh3::Property_map<E3, bool> ecm1,
-                Mesh3& mesh2, Mesh3::Property_map<V3, ssize_t>& vert_ids2, Mesh3::Property_map<E3, bool> ecm2) {
-
-            CorefinementVisitor visitor(mesh1, mesh2, vert_ids1, vert_ids2);
-            auto params1 = PMP::parameters::visitor(visitor).edge_is_constrained_map(ecm1);
-            auto params2 = PMP::parameters::edge_is_constrained_map(ecm2);
-            bool success = PMP::corefine_and_compute_union(mesh1, mesh2, mesh1, params1, params2);
-            if (!success) {
-                throw std::runtime_error("Boolean operation failed.");
-            }
-        })
-        .def("intersection", [](Mesh3& mesh1, Mesh3& mesh2) {
-            Mesh3 result;
-            bool success = CGAL::Polygon_mesh_processing::corefine_and_compute_intersection(mesh1, mesh2, result);
-            if (!success) {
-                throw std::runtime_error("Boolean operation failed.");
-            }
-            return result;
         })
         .def("shortest_path", [](
                 const Mesh3& mesh,
