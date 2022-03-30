@@ -115,7 +115,7 @@ ext_modules = [
             # 'src/simplification.cpp',
             # 'src/polygon_set.cpp',
             'src/skgeom.cpp',
-            'src/kernel.cpp',
+            # 'src/kernel.cpp',
             # 'src/polygon.cpp',
             'src/global_functions.cpp',
             # 'src/boolean.cpp',
