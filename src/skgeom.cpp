@@ -12,7 +12,7 @@ namespace py = pybind11;
 
 
 //void init_skgeom_kernel(py::module&);
-void init_global_functions(py::module&);
+// void init_global_functions(py::module&);
 //void init_polygon(py::module&);
 //void init_boolean_set(py::module&);
 //void init_polygon_set(py::module&);
@@ -35,7 +35,7 @@ void init_mesh(py::module&);
 PYBIND11_MODULE(_skgeom, m) {
     m.doc() = "";
 
-    init_global_functions(m);
+//    init_global_functions(m);
 //    init_skgeom_kernel(m);
 //    init_arrangement(m);
 //    init_polygon(m);
