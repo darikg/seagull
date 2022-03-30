@@ -15,7 +15,7 @@ typedef typename CGAL::AABB_face_graph_triangle_primitive<Mesh3>    AABB_primiti
 typedef typename CGAL::AABB_traits<Kernel, AABB_primitive3>         AABB_traits3;
 typedef typename CGAL::AABB_tree<AABB_traits3>                      AABB_Tree3;
 
-py::array_t<double, py::array::c_style> points_to_array_(const std::vector<Point_3>& points) {
+py::array_t<double, py::array::c_style> points_to_array(const std::vector<Point_3>& points) {
     // convert points to arrays
     const size_t np = points.size();
     py::array_t<double, py::array::c_style> points_out({np, size_t(3)});
@@ -121,7 +121,7 @@ void init_locate(py::module &m) {
             std::vector<Point_3> points;
             shortest_path.shortest_path_points_to_source_points(tgt_face, tgt_bc_, std::back_inserter(points));
 
-            return points_to_array_(points);
+            return points_to_array(points);
         })
     ;
 }

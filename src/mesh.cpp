@@ -9,18 +9,6 @@
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 
-py::array_t<double, py::array::c_style> points_to_array(const std::vector<Point_3>& points) {
-    // convert points to arrays
-    const size_t np = points.size();
-    py::array_t<double, py::array::c_style> points_out({np, size_t(3)});
-    auto r = points_out.mutable_unchecked<2>();
-    for (auto i = 0; i < np; i++) {
-        for (auto j = 0; j < 3; j++) {
-            r(i, j) = CGAL::to_double(points[i][j]);
-        }
-    }
-    return points_out;
-}
 
 std::vector<Point_3> array_to_points_3(const py::array_t<double> &verts) {
     auto v = verts.unchecked<2>();
@@ -200,30 +188,5 @@ void init_mesh(py::module &m) {
         })
     ;
 
-   define_mesh<Mesh2, Point_2, V2, F2, E2, H2>(sub, "Mesh2")
-//        .def("locate_with_aabb_tree", [](const Mesh2& mesh, const py::array_t<double>& points_in) {
-//            using AABB_face_graph_primitive = typename CGAL::AABB_face_graph_triangle_primitive<Mesh2>;
-//            using AABB_face_graph_traits = CGAL::AABB_traits<Kernel, AABB_face_graph_primitive>;
-//            using AABBT = CGAL::AABB_tree<AABB_face_graph_traits>;
-//            AABBT tree;
-//            const Point2_to_Point3 vpm(mesh);
-//            auto params = CGAL::parameters::vertex_point_map(vpm);
-//            PMP::build_AABB_tree(mesh, tree, params);
-//            const Point_3 pt = Point_3(0, 0, 0);
-//            auto loc = PMP::locate_with_AABB_tree(pt, tree, mesh, params);
-//            return true;
-//
-////            auto r = points_in.unchecked<2>();
-////            size_t np = r.shape(0);
-////            std::vector<Point_2> points;
-////            points.reserve(np);
-////
-////            for (size_t i = 0; i < np; i++) {
-////                points.emplace_back(Point_2(r(i, 0), r(i, 1)));
-////            }
-//
-//            // return locate_points_with_aabb_tree<Mesh2, F2, Point_2, AABBT>(mesh, points, tree);
-//            // auto loc = PMP::locate_with_AABB_tree(points[i], tree, mesh)
-//        })
-   ;
+   define_mesh<Mesh2, Point_2, V2, F2, E2, H2>(sub, "Mesh2");
 }
