@@ -1,3 +1,11 @@
 - Mesh
   - refactor common code for vertices, edges, etc
     - return ndarray(dtype=obj)
+
+- Before release
+  - Figure out conda forge
+  - Figure out CI
+  - Black, c++ formatter, etc
+  - Turn off debug mode
+    - And setup.py arg?
+    - 
