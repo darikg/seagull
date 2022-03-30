@@ -1,6 +1,5 @@
 #include "skgeom.hpp"
 
-#include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
 #include <CGAL/Surface_mesh.h>
