@@ -151,6 +151,26 @@ auto define_mesh(py::module &m, std::string name) {
 
             return verts;
         })
+        .def("expand_selection", [](Mesh& mesh, const std::vector<V>& selected) {
+            std::set<V> expanded;
+            for (V v0 : selected) {
+                expanded.insert(v0);
+                for (V v1 : vertices_around_target(mesh.halfedge(v0), mesh)) {
+                    expanded.insert(v1);
+                }
+            }
+            return expanded;
+        })
+        .def("expand_selection", [](Mesh& mesh, const std::vector<F>& selected) {
+            std::set<F> expanded;
+            for (F f0 : selected) {
+                expanded.insert(f0);
+                for (F f1 : faces_around_face(mesh.halfedge(f0), mesh)) {
+                    expanded.insert(f1);
+                }
+            }
+            return expanded;
+        })
     ;
 }
 
@@ -166,32 +186,6 @@ void init_mesh(py::module &m) {
     py::class_<H3>(sub, "Halfedge");
 
     define_mesh<Mesh3, Point_3, V3, F3, E3, H3>(sub, "Mesh3")
-        .def("expand_selection", [](Mesh3& mesh, const std::vector<V3>& selected) {
-            std::set<V3> expanded;
-
-            for (V3 v0 : selected) {
-                expanded.insert(v0);
-
-                for (V3 v1 : vertices_around_target(mesh.halfedge(v0), mesh)) {
-                    expanded.insert(v1);
-                }
-            }
-
-            return expanded;
-        })
-        .def("expand_selection", [](Mesh3& mesh, const std::vector<F3>& selected) {
-            std::set<F3> expanded;
-
-            for (F3 f0 : selected) {
-                expanded.insert(f0);
-
-                for (F3 f1 : faces_around_face(mesh.halfedge(f0), mesh)) {
-                    expanded.insert(f1);
-                }
-            }
-
-            return expanded;
-        })
         .def("face_normals", [](const Mesh3& mesh, const std::vector<F3> faces) {
             const size_t nf = faces.size();
             py::array_t<double, py::array::c_style> normals({nf, size_t(3)});

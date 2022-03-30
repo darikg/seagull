@@ -117,7 +117,7 @@ ext_modules = [
             # 'src/properties.cpp',
             # 'src/corefine.cpp',
             # 'src/meshing.cpp',
-            'src/locate.cpp',
+            # 'src/locate.cpp',
         ],
         include_dirs=include_dirs,
         library_dirs=library_dirs,

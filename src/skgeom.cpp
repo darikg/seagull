@@ -16,5 +16,5 @@ PYBIND11_MODULE(_skgeom, m) {
     // init_properties(m);
     // init_corefine(m);
     // init_meshing(m);
-    init_locate(m);
+    // init_locate(m);
 }
