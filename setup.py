@@ -112,24 +112,7 @@ ext_modules = [
     Extension(
         'skgeom._skgeom',
         [
-            # 'src/simplification.cpp',
-            # 'src/polygon_set.cpp',
             'src/skgeom.cpp',
-            # 'src/kernel.cpp',
-            # 'src/polygon.cpp',
-            # 'src/global_functions.cpp',
-            # 'src/boolean.cpp',
-            # 'src/convex_hull.cpp',
-            # 'src/visibility.cpp',
-            # 'src/arrangement.cpp',
-            # 'src/principal_component_analysis.cpp',
-            # 'src/minkowski.cpp',
-            # 'src/polyhedron.cpp',
-            # 'src/aabb_tree.cpp',
-            # 'src/voronoi_delaunay.cpp',
-            # 'src/optimal_transport.cpp',
-            # 'src/skeleton.cpp',
-            # 'src/inscribed.cpp',
             'src/mesh.cpp',
         ],
         include_dirs=include_dirs,
@@ -232,6 +215,7 @@ setup(
     description='scikit-geometry, the python computational geometry library',
     long_description='',
     ext_modules=ext_modules,
+    # TODO
     install_requires=['pybind11>=2.3,<2.8', 'numpy'],
     setup_requires=['pybind11>=2.3,<2.8'],
     extras_require={

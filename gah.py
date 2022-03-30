@@ -5,7 +5,7 @@ import numpy as np
 from numpy import array, cos, sin,  pi, ones, arange, uint64, zeros
 from numpy.testing import assert_array_equal
 
-from skgeom._skgeom.surface_mesh import Mesh3
+from skgeom._skgeom.surface_mesh import Mesh3, Mesh2
 
 
 def tetrahedron(scale=1.0, rot_z=0.0):
@@ -41,9 +41,17 @@ def make_mesh():
 
 
 mesh = make_mesh()
-mesh.fair(mesh.vertices[:2])
-mesh.fair(mesh.vertices[:2], fairing_continuity=1)
-mesh.fair(mesh.vertices[:2], fairing_continuity=5)
+foo = mesh.add_vertex_property('foo', 0)
+foo[mesh.vertices] = arange(mesh.n_vertices)
+
+
+mesh2 = Mesh2(array([[0, 0], [0, 1], [1, 0]]), array([[0, 1, 2]], dtype='int'), True)
+foo = mesh2.add_vertex_property('foo', 0)
+foo[mesh2.vertices] = arange(mesh2.n_vertices)
+
+# mesh.fair(mesh.vertices[:2])
+# mesh.fair(mesh.vertices[:2], fairing_continuity=1)
+# mesh.fair(mesh.vertices[:2], fairing_continuity=5)
 # print(mesh.expand_selection(mesh.vertices[:2]))
 # tree = mesh.aabb_tree()
 # face_idx, bary_coords = mesh.locate_with_aabb_tree(tree, zeros((1, 3)))

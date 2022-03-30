@@ -407,10 +407,13 @@ void init_mesh(py::module &m) {
         return constrained_contour_pair_mesh(p, q, pidx, qidx, np0, nq0);
     });
 
-    py::class_<V3>(sub, "Vertex3");
-    py::class_<F3>(sub, "Face3");
-    py::class_<E3>(sub, "Edge3");
-    py::class_<H3>(sub, "Halfedge3");
+    // Don't really understand how pybind11, typedefs, and templates interact here
+    // But these serve as both Mesh3 and Mesh2 indices, so don't need to redefine
+    // them for Mesh2
+    py::class_<V3>(sub, "Vertex");
+    py::class_<F3>(sub, "Face");
+    py::class_<E3>(sub, "Edge");
+    py::class_<H3>(sub, "Halfedge");
 
     define_property_map<Mesh3, V3, bool>(sub, "Vert3BoolPropertyMap");
     define_property_map<Mesh3, V3, ssize_t>(sub, "Vert3IntPropertyMap");
@@ -603,38 +606,31 @@ void init_mesh(py::module &m) {
         })
     ;
 
-
-//    py::class_<V2>(sub, "Vertex2");
-//    py::class_<F2>(sub, "Face2");
-//    py::class_<E2>(sub, "Edge2");
-//    py::class_<H2>(sub, "Halfedge2");
+   define_property_map<Mesh2, V2, ssize_t>(sub, "Vert2IntPropertyMap");
+   define_mesh<Mesh2, Point_2, V2, F2, E2, H2>(sub, "Mesh2")
+//        .def("locate_with_aabb_tree", [](const Mesh2& mesh, const py::array_t<double>& points_in) {
+//            using AABB_face_graph_primitive = typename CGAL::AABB_face_graph_triangle_primitive<Mesh2>;
+//            using AABB_face_graph_traits = CGAL::AABB_traits<Kernel, AABB_face_graph_primitive>;
+//            using AABBT = CGAL::AABB_tree<AABB_face_graph_traits>;
+//            AABBT tree;
+//            const Point2_to_Point3 vpm(mesh);
+//            auto params = CGAL::parameters::vertex_point_map(vpm);
+//            PMP::build_AABB_tree(mesh, tree, params);
+//            const Point_3 pt = Point_3(0, 0, 0);
+//            auto loc = PMP::locate_with_AABB_tree(pt, tree, mesh, params);
+//            return true;
 //
-//    define_property_map<Mesh2, V2, ssize_t>(sub, "Vert2IntPropertyMap");
+////            auto r = points_in.unchecked<2>();
+////            size_t np = r.shape(0);
+////            std::vector<Point_2> points;
+////            points.reserve(np);
+////
+////            for (size_t i = 0; i < np; i++) {
+////                points.emplace_back(Point_2(r(i, 0), r(i, 1)));
+////            }
 //
-//    define_mesh<Mesh2, Point_2, V2, F2, E2, H2>(sub, "Mesh2")
-////        .def("locate_with_aabb_tree", [](const Mesh2& mesh, const py::array_t<double>& points_in) {
-////            using AABB_face_graph_primitive = typename CGAL::AABB_face_graph_triangle_primitive<Mesh2>;
-////            using AABB_face_graph_traits = CGAL::AABB_traits<Kernel, AABB_face_graph_primitive>;
-////            using AABBT = CGAL::AABB_tree<AABB_face_graph_traits>;
-////            AABBT tree;
-////            const Point2_to_Point3 vpm(mesh);
-////            auto params = CGAL::parameters::vertex_point_map(vpm);
-////            PMP::build_AABB_tree(mesh, tree, params);
-////            const Point_3 pt = Point_3(0, 0, 0);
-////            auto loc = PMP::locate_with_AABB_tree(pt, tree, mesh, params);
-////            return true;
-////
-//////            auto r = points_in.unchecked<2>();
-//////            size_t np = r.shape(0);
-//////            std::vector<Point_2> points;
-//////            points.reserve(np);
-//////
-//////            for (size_t i = 0; i < np; i++) {
-//////                points.emplace_back(Point_2(r(i, 0), r(i, 1)));
-//////            }
-////
-////            // return locate_points_with_aabb_tree<Mesh2, F2, Point_2, AABBT>(mesh, points, tree);
-////            // auto loc = PMP::locate_with_AABB_tree(points[i], tree, mesh)
-////        })
-//    ;
+//            // return locate_points_with_aabb_tree<Mesh2, F2, Point_2, AABBT>(mesh, points, tree);
+//            // auto loc = PMP::locate_with_AABB_tree(points[i], tree, mesh)
+//        })
+   ;
 }
