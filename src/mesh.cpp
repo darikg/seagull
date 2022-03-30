@@ -30,52 +30,6 @@ typedef typename CGAL::AABB_traits<Kernel, AABB_primitive3>         AABB_traits3
 typedef typename CGAL::AABB_tree<AABB_traits3>                      AABB_Tree3;
 
 
-template <typename Mesh, typename Key, typename Val>
-auto add_property_map(Mesh& mesh, std::string name, const Val default_val) {
-    typename Mesh::Property_map<Key, Val> pmap;
-    bool created;
-    std::tie(pmap, created) = mesh.add_property_map<Key, Val>(name, default_val);
-    if (!created) {
-        throw std::runtime_error("Property map already exists");
-    }
-    return pmap;
-}
-
-template <typename Mesh, typename Key, typename Val>
-void define_property_map(py::module &m, std::string name) {
-    // https://stackoverflow.com/a/47749076/7519203
-    using PMap = typename Mesh::Property_map<Key, Val>;
-    py::class_<PMap>(m, name.c_str(), py::buffer_protocol(), py::dynamic_attr())
-        .def("__getitem__", [](const PMap& pmap, const Key& key) {
-            return pmap[key];
-        })
-        .def("__getitem__", [](const PMap& pmap, const std::vector<Key>& keys) {
-            size_t nk = keys.size();
-            py::array_t<Val, py::array::c_style> vals({int(nk)});
-            auto r = vals.mutable_unchecked<1>();
-
-            for (size_t i = 0; i < nk; i++) {
-                r(i) = pmap[keys[i]];
-            }
-            return vals;
-        })
-        .def("__setitem__", [](PMap& pmap, const Key& key, const Val val) {
-            pmap[key] = val;
-        })
-        .def("__setitem__", [](PMap& pmap, const std::vector<Key>& keys, const std::vector<Val>& vals) {
-            size_t nk = keys.size();
-            size_t nv = vals.size();
-            if (nk != nv) {
-                throw std::runtime_error("Key and value array sizes do not match");
-            }
-            for (size_t i = 0; i < nk; i++) {
-                pmap[keys[i]] = vals[i];
-            }
-        })
-    ;
-}
-
-
 py::array_t<double, py::array::c_style> points_to_array(const std::vector<Point_3>& points) {
     // convert points to arrays
     const size_t np = points.size();
@@ -88,8 +42,6 @@ py::array_t<double, py::array::c_style> points_to_array(const std::vector<Point_
     }
     return points_out;
 }
-
-
 
 std::vector<Point_3> array_to_points(const Mesh3& mesh, const py::array_t<double> &verts) {
     auto v = verts.unchecked<2>();
@@ -324,12 +276,6 @@ auto define_mesh(py::module &m, std::string name) {
         .def_property_readonly("n_faces", [](const Mesh& mesh) { return mesh.number_of_faces(); })
         .def_property_readonly("n_edges", [](const Mesh& mesh) { return mesh.number_of_edges(); })
 
-        .def("add_vertex_property", &add_property_map<Mesh, V, bool>)
-        .def("add_vertex_property", &add_property_map<Mesh, V, ssize_t>)
-        .def("add_face_property", &add_property_map<Mesh, F, bool>)
-        .def("add_face_property", &add_property_map<Mesh, F, ssize_t>)
-        .def("add_edge_property", &add_property_map<Mesh, E, bool>)
-
         .def_property_readonly("vertices", [](const Mesh& mesh) {
             std::vector<V> verts;
             verts.reserve(mesh.number_of_vertices());
@@ -396,12 +342,6 @@ void init_mesh(py::module &m) {
     py::class_<F3>(sub, "Face");
     py::class_<E3>(sub, "Edge");
     py::class_<H3>(sub, "Halfedge");
-
-    define_property_map<Mesh3, V3, bool>(sub, "Vert3BoolPropertyMap");
-    define_property_map<Mesh3, V3, ssize_t>(sub, "Vert3IntPropertyMap");
-    define_property_map<Mesh3, F3, bool>(sub, "Face3BoolPropertyMap");
-    define_property_map<Mesh3, F3, ssize_t>(sub, "Face3IntPropertyMap");
-    define_property_map<Mesh3, E3, bool>(sub, "Edge3BoolPropertyMap");
 
     py::class_<AABB_Tree3>(sub, "AABB_Tree3");
 
@@ -588,7 +528,6 @@ void init_mesh(py::module &m) {
         })
     ;
 
-   define_property_map<Mesh2, V2, ssize_t>(sub, "Vert2IntPropertyMap");
    define_mesh<Mesh2, Point_2, V2, F2, E2, H2>(sub, "Mesh2")
 //        .def("locate_with_aabb_tree", [](const Mesh2& mesh, const py::array_t<double>& points_in) {
 //            using AABB_face_graph_primitive = typename CGAL::AABB_face_graph_triangle_primitive<Mesh2>;

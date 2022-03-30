@@ -10,9 +10,8 @@
 #include <CGAL/Surface_mesh.h>
 
 
-
-
 namespace py = pybind11;
+
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
 
 typedef Kernel::Point_2                             Point_2;
