@@ -1,6 +1,5 @@
 #include "skgeom.hpp"
 
-#include <CGAL/Surface_mesh.h>
 #include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
 #include <CGAL/Polygon_mesh_processing/polygon_mesh_to_polygon_soup.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
@@ -24,23 +23,11 @@
 namespace PMP = CGAL::Polygon_mesh_processing;
 typedef PMP::Barycentric_coordinates<Kernel::FT>    Barycentric_coordinates;
 
-
-typedef CGAL::Surface_mesh<Point_3>                 Mesh3;
-typedef Mesh3::Vertex_index                         V3;
-typedef Mesh3::Face_index                           F3;
-typedef Mesh3::Halfedge_index                       H3;
-typedef Mesh3::Edge_index                           E3;
 typedef PMP::Face_location<Mesh3, Kernel::FT>       Loc3;
 
 typedef typename CGAL::AABB_face_graph_triangle_primitive<Mesh3>    AABB_primitive3;
 typedef typename CGAL::AABB_traits<Kernel, AABB_primitive3>         AABB_traits3;
 typedef typename CGAL::AABB_tree<AABB_traits3>                      AABB_Tree3;
-
-typedef CGAL::Surface_mesh<Point_2>                 Mesh2;
-typedef Mesh2::Vertex_index                         V2;
-typedef Mesh2::Face_index                           F2;
-typedef Mesh2::Halfedge_index                       H2;
-typedef Mesh2::Edge_index                           E2;
 
 
 template <typename Mesh, typename Key, typename Val>
