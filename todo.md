@@ -1,0 +1,3 @@
+- Mesh
+  - refactor common code for vertices, edges, etc
+    - return ndarray(dtype=obj)

@@ -12,5 +12,6 @@ dependencies:
   - ipykernel
   - gxx_linux-64
   - libgcc
+  - pytest
   - pip:
     - nbsphinx

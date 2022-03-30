@@ -114,7 +114,7 @@ ext_modules = [
         [
             'src/skgeom.cpp',
             'src/mesh.cpp',
-            # 'src/properties.cpp',
+            'src/properties.cpp',
             # 'src/corefine.cpp',
             # 'src/meshing.cpp',
             # 'src/locate.cpp',
