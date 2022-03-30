@@ -22,53 +22,6 @@ typedef typename CGAL::AABB_face_graph_triangle_primitive<Mesh3>    AABB_primiti
 typedef typename CGAL::AABB_traits<Kernel, AABB_primitive3>         AABB_traits3;
 typedef typename CGAL::AABB_tree<AABB_traits3>                      AABB_Tree3;
 
-
-py::array_t<double, py::array::c_style> points_to_array(const std::vector<Point_3>& points) {
-    // convert points to arrays
-    const size_t np = points.size();
-    py::array_t<double, py::array::c_style> points_out({np, size_t(3)});
-    auto r = points_out.mutable_unchecked<2>();
-    for (auto i = 0; i < np; i++) {
-        for (auto j = 0; j < 3; j++) {
-            r(i, j) = CGAL::to_double(points[i][j]);
-        }
-    }
-    return points_out;
-}
-
-std::vector<Point_3> array_to_points(const Mesh3& mesh, const py::array_t<double> &verts) {
-    auto v = verts.unchecked<2>();
-    if (v.shape(1) != 3) {
-        throw std::runtime_error("vertices need to be 3 dimensional");
-    }
-    const ssize_t nv = v.shape(0);
-    std::vector<Point_3> points;
-    points.reserve(nv);
-    for (ssize_t i = 0; i < nv; i++) {
-        points.emplace_back(Point_3(v(i, 0), v(i, 1), v(i, 2)));
-    }
-    return points;
-}
-
-std::vector<Point_2> array_to_points(const Mesh2& mesh, const py::array_t<double> &verts) {
-    auto v = verts.unchecked<2>();
-    if (v.shape(1) != 2) {
-        throw std::runtime_error("vertices need to be 2 dimensional");
-    }
-    const ssize_t nv = v.shape(0);
-    std::vector<Point_2> points;
-    points.reserve(nv);
-    for (ssize_t i = 0; i < nv; i++) {
-        points.emplace_back(Point_2(v(i, 0), v(i, 1)));
-    }
-    return points;
-}
-
-
-constexpr size_t ndims(const Mesh3& mesh) { return 3; }
-constexpr size_t ndims(const Mesh2& mesh) { return 2; }
-
-
 template<typename Mesh, typename Point, typename F>
 auto construct_points(const Mesh& mesh, const std::vector<F>& faces, const py::array_t<double>& bary_coords) {
     using Loc = typename PMP::Face_location<Mesh, Kernel::FT>;
