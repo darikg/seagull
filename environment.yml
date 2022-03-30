@@ -1,7 +1,7 @@
 channels:
   - conda-forge
 dependencies:
-  - scikit-geometry
+  - conda-cpp>=5.2
   - python==3.7
   - matplotlib
   - pybind11
