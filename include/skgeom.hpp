@@ -5,6 +5,7 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 
 #include <iostream>
 
