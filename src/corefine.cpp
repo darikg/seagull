@@ -32,7 +32,7 @@ struct CorefinementVisitor : public PMP::Corefinement::Default_visitor<Mesh3> {
 
 template <typename Mesh, typename E>
 auto named_parameters(const Mesh& mesh, const py::dict& kwargs) {
-    using ECM = typename Mesh::Property_map<E, bool>;
+    auto params = PMP::parameters::all_default();
 
     for (auto item : kwargs) {
         auto key = py::cast<std::string>(item.first);
@@ -43,15 +43,12 @@ auto named_parameters(const Mesh& mesh, const py::dict& kwargs) {
             if (!kv.second) {
                 throw std::runtime_error("not found");
             }
-            auto params = PMP::parameters::edge_is_constrained_map(kv.first);
-            return params;
-            // params.edge_is_constrained_map(kv.first);
+            params = params.edge_is_constrained_map(kv.first);
         } else {
             throw std::runtime_error("unrecognized parameter " + key);
         }
     }
-    throw std::runtime_error("whoops");
-    // return params;
+    return params;
 }
 
 void init_corefine(py::module &m) {
