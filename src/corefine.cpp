@@ -30,10 +30,29 @@ struct CorefinementVisitor : public PMP::Corefinement::Default_visitor<Mesh3> {
     }
 };
 
+template <typename Mesh, typename E>
+auto named_parameters(const py::dict& kwargs) {
+    using ECM = typename Mesh::Property_map<E, bool>;
+    auto params = PMP::parameters::all_default();
+
+    for (auto item : kwargs) {
+        auto key = py::cast<std::string>(item.first);
+
+        if (key.compare("edge_is_constrained_map")) {
+            params.edge_is_constrained_map(py::cast<ECM>(item.second));
+        }
+    }
+    return params;
+}
+
 void init_corefine(py::module &m) {
     py::module sub = m.def_submodule("corefine");
     sub.def("corefine", [](Mesh3& mesh1, Mesh3& mesh2){
         PMP::corefine(mesh1, mesh2);
+    })
+    .def("corefine", [](Mesh3& mesh1, Mesh3& mesh2, const py::dict& kwargs1){
+        auto np1 = named_parameters<Mesh3, E3>(kwargs1);
+        PMP::corefine(mesh1, mesh2, np1);
     })
     // .def("corefine", [](
     //         Mesh3& mesh1, Mesh3::Property_map<V3, ssize_t>& vert_ids1, Mesh3::Property_map<E3, bool> ecm1,
