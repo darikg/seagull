@@ -39,7 +39,7 @@ class Mesh(Generic[M]):
 
     def corefine(self, other: Mesh, np1: Dict[str, Any]):
         from skgeom._skgeom.corefine import corefine
-        corefine(self._mesh, other._mesh)
+        corefine(self._mesh, other._mesh, np1)
 
 
 class MeshData(Generic[M]):

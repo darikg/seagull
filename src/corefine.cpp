@@ -31,27 +31,36 @@ struct CorefinementVisitor : public PMP::Corefinement::Default_visitor<Mesh3> {
 };
 
 template <typename Mesh, typename E>
-auto named_parameters(const py::dict& kwargs) {
+auto named_parameters(const Mesh& mesh, const py::dict& kwargs) {
     using ECM = typename Mesh::Property_map<E, bool>;
-    auto params = PMP::parameters::all_default();
 
     for (auto item : kwargs) {
         auto key = py::cast<std::string>(item.first);
 
-        if (key.compare("edge_is_constrained_map")) {
-            params.edge_is_constrained_map(py::cast<ECM>(item.second));
+        if (key == "edge_is_constrained_map") {
+            auto name = py::cast<std::string>(item.second);
+            auto kv = mesh.property_map<E, bool>(name);
+            if (!kv.second) {
+                throw std::runtime_error("not found");
+            }
+            auto params = PMP::parameters::edge_is_constrained_map(kv.first);
+            return params;
+            // params.edge_is_constrained_map(kv.first);
+        } else {
+            throw std::runtime_error("unrecognized parameter " + key);
         }
     }
-    return params;
+    throw std::runtime_error("whoops");
+    // return params;
 }
 
 void init_corefine(py::module &m) {
     py::module sub = m.def_submodule("corefine");
-    sub.def("corefine", [](Mesh3& mesh1, Mesh3& mesh2){
-        PMP::corefine(mesh1, mesh2);
-    })
-    .def("corefine", [](Mesh3& mesh1, Mesh3& mesh2, const py::dict& kwargs1){
-        auto np1 = named_parameters<Mesh3, E3>(kwargs1);
+    // sub.def("corefine", [](Mesh3& mesh1, Mesh3& mesh2){
+    //     PMP::corefine(mesh1, mesh2);
+    // })
+    sub.def("corefine", [](Mesh3& mesh1, Mesh3& mesh2, const py::dict& kwargs1){
+        auto np1 = named_parameters<Mesh3, E3>(mesh1, kwargs1);
         PMP::corefine(mesh1, mesh2, np1);
     })
     // .def("corefine", [](

@@ -18,8 +18,8 @@ def tetrahedron(scale=1.0, rot_z=0.0):
 
     faces = array([[2, 1, 0], [2, 3, 1], [3, 2, 0], [1, 3, 0]], dtype='int')
 
-    # return Mesh.from_polygon_soup(verts, faces, orient=True)
-    return verts, faces
+    return Mesh.from_polygon_soup(verts, faces, orient=True)
+    # return verts, faces
 
 
 def triangle(scale=1.0, rotate=0.0):
@@ -58,13 +58,12 @@ def mesh2():
 
 def test_corefine():
     from skgeom._skgeom.mesh import Mesh3
-    m1 = Mesh3(*tetrahedron(), True)
-    m2 = Mesh3(*tetrahedron(scale=1.5, rot_z=pi/4), True)
-    # m2 = tetrahedron(scale=1.5, rot_z=pi/4)
-    # ecm = m1.edge_data.add_property('ecm', False)
-    # m1.corefine(m2, dict(edge_is_constrained_map=ecm))
-    from skgeom._skgeom.corefine import corefine
-    corefine(m1, m2)
-    # m1.corefine(m2, dict())
-    # assert ecm[ecm.edges].any()
+    m1 = tetrahedron()
+    nv0 = m1.n_vertices
+    m2 = tetrahedron(scale=0.9, rot_z=pi/3)
+    ecm = m1.edge_data.add_property('ecm', False)
+    m1.corefine(m2, dict(edge_is_constrained_map='ecm'))
+    nv1 = m1.n_vertices
+    assert nv1 > nv0
+    assert ecm[m1.edges].any()
 
