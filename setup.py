@@ -110,9 +110,9 @@ else:
 
 ext_modules = [
     Extension(
-        'skgeom._skgeom',
+        'seagullmesh._seagullmesh',
         [
-            'src/skgeom.cpp',
+            'src/seagullmesh.cpp',
             'src/mesh.cpp',
             # 'src/properties.cpp',
             # 'src/corefine.cpp',
@@ -207,25 +207,21 @@ class BuildExt(build_ext):
 
 here = os.path.dirname(os.path.abspath(__file__))
 version_ns = {}
-with open(os.path.join(here, 'skgeom', '_version.py')) as f:
+with open(os.path.join(here, 'seagullmesh', '_version.py')) as f:
     exec(f.read(), {}, version_ns)
 
 setup(
-    name='skgeom',
+    name='seagullmesh',
     version=version_ns['__version__'],
-    author='Wolf Vollprecht',
-    author_email='w.vollprecht@gmail.com',
-    url='https://github.com/wolfv/scikit-geometry',
-    description='scikit-geometry, the python computational geometry library',
+    author='Darik Gamble',
+    author_email='darik.gamble@gmail.com',
+    url='https://github.com/darikg/seagull',
+    description="seagullmesh, python bindings to CGAL's surface mesh processing modules",
     long_description='',
     ext_modules=ext_modules,
-    # TODO
     install_requires=['pybind11>=2.3,<2.8', 'numpy'],
     setup_requires=['pybind11>=2.3,<2.8'],
-    extras_require={
-        "drawing": ["matplotlib"],
-    },
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
-    packages=['skgeom'],
+    packages=['seagullmesh'],
 )

@@ -30,6 +30,3 @@ typedef Mesh2::Vertex_index             V2;
 typedef Mesh2::Face_index               F2;
 typedef Mesh2::Halfedge_index           H2;
 typedef Mesh2::Edge_index               E2;
-
-constexpr size_t ndims(const Mesh3& mesh) { return 3; }
-constexpr size_t ndims(const Mesh2& mesh) { return 2; }

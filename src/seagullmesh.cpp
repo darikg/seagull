@@ -1,6 +1,3 @@
-// Python CGAL bindings 
-// Author: Wolf Vollprecht <w.vollprecht@gmail.com>
-
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
@@ -10,7 +7,7 @@ void init_mesh(py::module&);
 // void init_meshing(py::module&);
 // void init_locate(py::module&);
 
-PYBIND11_MODULE(_skgeom, m) {
+PYBIND11_MODULE(_seagullmesh, m) {
     m.doc() = "";
     init_mesh(m);
     // init_properties(m);

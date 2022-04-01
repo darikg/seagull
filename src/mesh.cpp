@@ -1,4 +1,4 @@
-#include "skgeom.hpp"
+#include "seagullmesh.hpp"
 
 #include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
 #include <CGAL/Polygon_mesh_processing/polygon_mesh_to_polygon_soup.h>
