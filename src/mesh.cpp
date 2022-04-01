@@ -10,40 +10,32 @@
 namespace PMP = CGAL::Polygon_mesh_processing;
 
 
-std::vector<Point_3> array_to_points_3(const py::array_t<double> &verts) {
+std::vector<Point3> array_to_points_3(const py::array_t<double> &verts) {
     auto v = verts.unchecked<2>();
     if (v.shape(1) != 3) {
         throw std::runtime_error("vertices need to be 3 dimensional");
     }
     const ssize_t nv = v.shape(0);
-    std::vector<Point_3> points;
+    std::vector<Point3> points;
     points.reserve(nv);
     for (ssize_t i = 0; i < nv; i++) {
-        points.emplace_back(Point_3(v(i, 0), v(i, 1), v(i, 2)));
+        points.emplace_back(Point3(v(i, 0), v(i, 1), v(i, 2)));
     }
     return points;
 }
 
-std::vector<Point_2> array_to_points_2(const py::array_t<double> &verts) {
+std::vector<Point2> array_to_points_2(const py::array_t<double> &verts) {
     auto v = verts.unchecked<2>();
     if (v.shape(1) != 2) {
         throw std::runtime_error("vertices need to be 2 dimensional");
     }
     const ssize_t nv = v.shape(0);
-    std::vector<Point_2> points;
+    std::vector<Point2> points;
     points.reserve(nv);
     for (ssize_t i = 0; i < nv; i++) {
-        points.emplace_back(Point_2(v(i, 0), v(i, 1)));
+        points.emplace_back(Point2(v(i, 0), v(i, 1)));
     }
     return points;
-}
-
-std::vector<Point_3> array_to_points(const Mesh3& mesh, const py::array_t<double> &verts) {
-    return array_to_points_3(verts);
-}
-
-std::vector<Point_2> array_to_points(const Mesh2& mesh, const py::array_t<double> &verts) {
-    return array_to_points_2(verts);
 }
 
 
@@ -51,19 +43,6 @@ template<typename Mesh, typename Point, typename V, typename F, typename E, type
 auto define_mesh(py::module &m, std::string name) {
     return py::class_<Mesh>(m, name.c_str())
         .def(py::init<>())
-        .def(py::init([](py::array_t<double> &verts, std::vector<std::vector<size_t>>& faces, const bool orient) {
-            Mesh mesh;
-            std::vector<Point> points = array_to_points(mesh, verts);
-
-            if (orient) {
-                bool success = PMP::orient_polygon_soup(points, faces);
-                if (!success) {
-                    throw std::runtime_error("Polygon orientation failed");
-                }
-            }
-            PMP::polygon_soup_to_polygon_mesh(points, faces, mesh);
-            return mesh;
-        }))
         .def("to_polygon_soup", [](const Mesh& mesh) {
             std::vector<Point> verts;
             std::vector<std::vector<size_t>> faces;
@@ -166,6 +145,24 @@ auto define_mesh(py::module &m, std::string name) {
 void init_mesh(py::module &m) {
     py::module sub = m.def_submodule("mesh");
 
+    sub.def("polygon_soup_to_mesh3", [](
+            py::array_t<double> &points, 
+            std::vector<std::vector<size_t>>& faces, 
+            const bool orient) {
+
+        Mesh3 mesh;
+        std::vector<Point3> vertices = array_to_points_3(points);
+
+        if (orient) {
+            bool success = PMP::orient_polygon_soup(vertices, faces);
+            if (!success) {
+                throw std::runtime_error("Polygon orientation failed");
+            }
+        }
+        PMP::polygon_soup_to_polygon_mesh(vertices, faces, mesh);
+        return mesh;
+    });
+
     // Don't really understand how pybind11, typedefs, and templates interact here
     // But these serve as both Mesh3 and Mesh2 indices, so don't need to redefine them for Mesh2
     py::class_<V3>(sub, "Vertex");
@@ -173,7 +170,7 @@ void init_mesh(py::module &m) {
     py::class_<E3>(sub, "Edge");
     py::class_<H3>(sub, "Halfedge");
 
-    define_mesh<Mesh3, Point_3, V3, F3, E3, H3>(sub, "Mesh3")
+    define_mesh<Mesh3, Point3, V3, F3, E3, H3>(sub, "Mesh3")
         .def("face_normals", [](const Mesh3& mesh, const std::vector<F3> faces) {
             const size_t nf = faces.size();
             py::array_t<double, py::array::c_style> normals({nf, size_t(3)});
@@ -188,5 +185,5 @@ void init_mesh(py::module &m) {
         })
     ;
 
-   define_mesh<Mesh2, Point_2, V2, F2, E2, H2>(sub, "Mesh2");
+   //define_mesh<Mesh2, Point2, V2, F2, E2, H2>(sub, "Mesh2");
 }
