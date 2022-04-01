@@ -38,43 +38,34 @@ std::vector<Point2> array_to_points_2(const py::array_t<double> &verts) {
     return points;
 }
 
+template<typename T>
+auto define_simple_type_3(py::module &m, std::string name) {
+    py::class_<T>(m, name.c_str())
+        .def(py::init<>([](double x, double y, double z) {
+            return T(x, y, z);
+        }));
+}
+
+template<typename T>
+auto define_simple_type_2(py::module &m, std::string name) {
+    py::class_<T>(m, name.c_str())
+        .def(py::init<>([](double x, double y) {
+            return T(x, y);
+        }));
+}
+
 
 template<typename Mesh, typename Point, typename V, typename F, typename E, typename H>
 auto define_mesh(py::module &m, std::string name) {
     return py::class_<Mesh>(m, name.c_str())
         .def(py::init<>())
-        .def("to_polygon_soup", [](const Mesh& mesh) {
-            std::vector<Point> verts;
-            std::vector<std::vector<size_t>> faces;
-            PMP::polygon_mesh_to_polygon_soup(mesh, verts, faces);
-
-            // convert points to arrays
-            const size_t nv = mesh.number_of_vertices();
-            py::array_t<double, py::array::c_style> verts_out({nv, ndims(mesh)});
-            auto rv = verts_out.mutable_unchecked<2>();
-            for (size_t i = 0; i < nv; i++) {
-                Point p = verts[i];
-                for (auto j = 0; j < ndims(mesh); j++) {
-                    rv(i, j) = CGAL::to_double(p[j]);
-                }
-            }
-
-            // ditto faces
-            const size_t nf = mesh.number_of_faces();
-            py::array_t<size_t, py::array::c_style> faces_out({nf, size_t(3)});
-            auto rf = faces_out.mutable_unchecked<2>();
-            for (size_t i = 0; i < nf; i++) {
-                for (size_t j = 0; j < 3; j++) {
-                    rf(i, j) = faces[i][j];
-                }
-            }
-            return std::make_tuple(verts_out, faces_out);
-        })
+        
         .def_property_readonly("is_valid", [](const Mesh& mesh) { return mesh.is_valid(false); })
         .def_property_readonly("n_vertices", [](const Mesh& mesh) { return mesh.number_of_vertices(); })
         .def_property_readonly("n_faces", [](const Mesh& mesh) { return mesh.number_of_faces(); })
         .def_property_readonly("n_edges", [](const Mesh& mesh) { return mesh.number_of_edges(); })
-
+        .def_property_readonly("n_halfedges", [](const Mesh& mesh) { return mesh.number_of_halfedges(); }
+        )
         .def_property_readonly("vertices", [](const Mesh& mesh) {
             std::vector<V> verts;
             verts.reserve(mesh.number_of_vertices());
@@ -98,6 +89,14 @@ auto define_mesh(py::module &m, std::string name) {
                 edges.emplace_back(e);
             }
             return edges;
+        })
+        .def_property_readonly("halfedges", [](const Mesh& mesh) {
+            std::vector<H> halfedges;
+            halfedges.reserve(mesh.number_of_halfedges());
+            for (H h : mesh.halfedges()) {
+                halfedges.emplace_back(h);
+            }
+            return halfedges;
         })
         .def("edge_vertices", [](const Mesh& mesh, const std::vector<E>& edges) {
             std::map<V, size_t> vert_idxs;
@@ -145,6 +144,11 @@ auto define_mesh(py::module &m, std::string name) {
 void init_mesh(py::module &m) {
     py::module sub = m.def_submodule("mesh");
 
+    define_simple_type_2<Point2>(sub, "Point2");
+    define_simple_type_3<Point3>(sub, "Point3");
+    define_simple_type_2<Vector2>(sub, "Vector2");
+    define_simple_type_3<Vector3>(sub, "Vector3");
+
     sub.def("polygon_soup_to_mesh3", [](
             py::array_t<double> &points, 
             std::vector<std::vector<size_t>>& faces, 
@@ -171,6 +175,33 @@ void init_mesh(py::module &m) {
     py::class_<H3>(sub, "Halfedge");
 
     define_mesh<Mesh3, Point3, V3, F3, E3, H3>(sub, "Mesh3")
+        .def("to_polygon_soup", [](const Mesh3& mesh) {
+            std::vector<Point3> verts;
+            std::vector<std::vector<size_t>> faces;
+            PMP::polygon_mesh_to_polygon_soup(mesh, verts, faces);
+
+            // convert points to arrays
+            const size_t nv = mesh.number_of_vertices();
+            py::array_t<double, py::array::c_style> verts_out({nv, size_t(3)});
+            auto rv = verts_out.mutable_unchecked<2>();
+            for (size_t i = 0; i < nv; i++) {
+                Point3 p = verts[i];
+                for (auto j = 0; j < 3; j++) {
+                    rv(i, j) = CGAL::to_double(p[j]);
+                }
+            }
+
+            // ditto faces
+            const size_t nf = mesh.number_of_faces();
+            py::array_t<size_t, py::array::c_style> faces_out({nf, size_t(3)});
+            auto rf = faces_out.mutable_unchecked<2>();
+            for (size_t i = 0; i < nf; i++) {
+                for (size_t j = 0; j < 3; j++) {
+                    rf(i, j) = faces[i][j];
+                }
+            }
+            return std::make_tuple(verts_out, faces_out);
+        })
         .def("face_normals", [](const Mesh3& mesh, const std::vector<F3> faces) {
             const size_t nf = faces.size();
             py::array_t<double, py::array::c_style> normals({nf, size_t(3)});
