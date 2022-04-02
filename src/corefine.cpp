@@ -1,10 +1,10 @@
-#include "skgeom.hpp"
+#include "seagullmesh.hpp"
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 
 typedef Mesh3::Property_map<V3, ssize_t>    VertexIndex;
-typedef Mesh3::Property_map<E3, bool>       EdgeConstrainedMap,
+typedef Mesh3::Property_map<E3, bool>       EdgeConstrainedMap;
 
 struct CorefinementVertexTracker : public PMP::Corefinement::Default_visitor<Mesh3> {
     // Used for tracking for refinement indices
@@ -71,7 +71,7 @@ void init_corefine(py::module &m) {
         return result;
     })
     .def("union", [](
-            Mesh3& mesh3, Mesh3& mesh2,
+            Mesh3& mesh1, Mesh3& mesh2,
             EdgeConstrainedMap& ecm1, EdgeConstrainedMap& ecm2,
             CorefinementVertexTracker& tracker) {
 

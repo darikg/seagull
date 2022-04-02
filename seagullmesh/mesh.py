@@ -8,8 +8,7 @@ from seagullmesh._seagullmesh.mesh import (  # noqa
     Mesh3 as _Mesh3,
     polygon_soup_to_mesh3,
 )
-from seagullmesh._seagullmesh import properties, corefine, meshing  # noqa
-
+from seagullmesh import _seagullmesh as sgm
 
 if TYPE_CHECKING:
     import pyvista as pv  # noqa
@@ -18,7 +17,7 @@ if TYPE_CHECKING:
 class Mesh3:
     def __init__(self, mesh: Mesh3):
         self._mesh = mesh
-        self.vertex_data = MeshData(mesh, properties.add_vertex_property, 'vertices')
+        self.vertex_data = MeshData(mesh, sgm.properties.add_vertex_property, 'vertices')
         self.edge_data = MeshData(mesh, properties.add_edge_property, 'edges')
 
     mesh = property(lambda self: self._mesh)
@@ -88,6 +87,15 @@ class Mesh3:
 
     def refine(self, faces, density=sqrt(3)):
         return meshing.refine(self._mesh, faces, density)
+
+    def aabb_tree(self, points: Optional[str] = None):
+        if points:
+            return self._mesh.aabb_tree(self.vertex_data['points'])
+        else:
+            return self._mesh.aabb_tree()
+
+    def locate_points(self):
+        pass
 
 
 
