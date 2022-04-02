@@ -16,6 +16,9 @@ namespace PMP = CGAL::Polygon_mesh_processing;
 typedef PMP::Barycentric_coordinates<Kernel::FT>    Barycentric_coordinates;
 typedef PMP::Face_location<Mesh3, Kernel::FT>       FaceLoc3;
 
+typedef Mesh3::Property_map<V3, Point3>             VertPoints3;
+typedef Mesh3::Property_map<V3, Point2>             VertPoints2;
+
 typedef typename CGAL::AABB_face_graph_triangle_primitive<Mesh3>    AABB_primitive3;
 typedef typename CGAL::AABB_traits<Kernel, AABB_primitive3>         AABB_traits3;
 typedef typename CGAL::AABB_tree<AABB_traits3>                      AABB_Tree3;
@@ -84,22 +87,25 @@ auto locate_points(const Mesh3& mesh, const AABB_Tree3& tree, const py::array_t<
     return std::make_tuple(faces, bary_coords);
 }
 
-// struct Point2_to_Point3 {
-//     using key_type = V2;
-//     using value_type = Point3;
-//     using reference = Point3;
-//     using category = boost::readable_property_map_tag;
+struct Point2_to_Point3 {
+    // https://stackoverflow.com/questions/66308313/2d-aabbtree-in-cgal-with-custom-property-map
+    // https://stackoverflow.com/questions/24317345/cgal-using-locate-to-find-cell-on-triangulation-surface
+    using key_type = V3;
+    using value_type = Point3;
+    using reference = Point3;
+    using category = boost::readable_property_map_tag;
 
-//     const Mesh2& mesh;
+    const VertPoints2* points;
 
-//     Point2_to_Point3(const Mesh2 &mesh) : mesh(mesh) {}
+    Point2_to_Point3() : points(nullptr) {}
+    Point2_to_Point3(const VertPoints2& points) : points(&points) {}
 
-//     friend Point_3 get(const Point2_to_Point3 &map, V2 v) {
-//         //auto p = map.mesh.point(v);
-//         // return {p[0], p[1], 0};
-//         return {0, 0, 0};
-//     }
-// };
+    friend Point3 get(const Point2_to_Point3 &map, V3 v) {
+        auto p = map.points->operator[](v);
+        return {p[0], p[1], 0};
+    }
+};
+
 
 void init_locate(py::module &m) {
     py::module sub = m.def_submodule("locate");
@@ -110,6 +116,24 @@ void init_locate(py::module &m) {
         .def("aabb_tree", [](const Mesh3& mesh) {
             AABB_Tree3 tree;
             PMP::build_AABB_tree(mesh, tree);
+            return tree;
+        })
+        .def("aabb_tree", [](const Mesh3& mesh, const VertPoints3& point_map) {
+            AABB_Tree3 tree;
+            auto params = CGAL::parameters::vertex_point_map(point_map);
+            PMP::build_AABB_tree(mesh, tree, params);
+            return tree;
+        })
+        .def("aabb_tree", [](const Mesh3& mesh, const VertPoints2& points2) {
+            typedef typename CGAL::AABB_face_graph_triangle_primitive<Mesh3, Point2_to_Point3>      AABB_primitive2;
+            typedef typename CGAL::AABB_traits<Kernel, AABB_primitive2>                             AABB_traits2;
+            typedef typename CGAL::AABB_tree<AABB_traits2>                                          AABB_Tree2;
+
+            AABB_Tree2 tree;
+            Point2_to_Point3 points3(points2);
+
+            auto params = CGAL::parameters::vertex_point_map(points3);
+            PMP::build_AABB_tree(mesh, tree, params);
             return tree;
         })
         .def("locate_points", &locate_points)
