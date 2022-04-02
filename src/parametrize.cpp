@@ -17,11 +17,11 @@ typedef SMP::ARAP_parameterizer_3<Mesh3, BorderParameterizer>   ArapParameterize
 
 void init_parametrize(py::module &m) {
     m.def_submodule("parametrize")
-        .def("lscm", [](const Mesh3& mesh, UVMap& uv) {
+        .def("lscm", [](Mesh3& mesh, UVMap& uv) {
             H3 boundary_halfedge = PMP::longest_border(mesh).first;
             SMP::parameterize(mesh, LscmParameterizer(), boundary_halfedge, uv);
         })
-        .def("arap", [](const Mesh3& mesh, UVMap& uv) {
+        .def("arap", [](Mesh3& mesh, UVMap& uv) {
             H3 boundary_halfedge = PMP::longest_border(mesh).first;
             SMP::parameterize(mesh, ArapParameterizer(), boundary_halfedge, uv);
         })
