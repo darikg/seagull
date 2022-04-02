@@ -22,26 +22,9 @@ def tetrahedron(scale=1.0, rot_z=0.0):
     # return verts, faces
 
 
-def triangle(scale=1.0, rotate=0.0):
-    verts = scale * array([[-1, -1], [1, -1], [0, 1]], dtype='float')
-
-    if rotate:
-        rot = array([[cos(rotate), -sin(-rotate)], [sin(rotate), cos(-rotate)]])
-        verts = verts @ rot.T
-
-    faces = array([[0, 1, 2]], dtype='int')
-
-    return Mesh.from_polygon_soup(verts, faces, orient=True)
-
-
 @pytest.fixture
 def mesh():
     return tetrahedron()
-
-
-@pytest.fixture
-def mesh2():
-    return triangle()
 
 
 # @pytest.mark.parametrize('mesh', [tetrahedron(), triangle()])
@@ -56,14 +39,14 @@ def mesh2():
 #     assert mesh.vertex_data['foo'][verts[1]] == 2
 
 
-def test_corefine():
-    from skgeom._skgeom.mesh import Mesh3
-    m1 = tetrahedron()
-    nv0 = m1.n_vertices
-    m2 = tetrahedron(scale=0.9, rot_z=pi/3)
-    ecm = m1.edge_data.add_property('ecm', False)
-    m1.corefine(m2, dict(edge_is_constrained_map='ecm'))
-    nv1 = m1.n_vertices
-    assert nv1 > nv0
-    assert ecm[m1.edges].any()
+# def test_corefine():
+#     from skgeom._skgeom.mesh import Mesh3
+#     m1 = tetrahedron()
+#     nv0 = m1.n_vertices
+#     m2 = tetrahedron(scale=0.9, rot_z=pi/3)
+#     ecm = m1.edge_data.add_property('ecm', False)
+#     m1.corefine(m2, dict(edge_is_constrained_map='ecm'))
+#     nv1 = m1.n_vertices
+#     assert nv1 > nv0
+#     assert ecm[m1.edges].any()
 

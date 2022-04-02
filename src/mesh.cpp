@@ -64,8 +64,9 @@ auto define_mesh(py::module &m, std::string name) {
         .def_property_readonly("n_vertices", [](const Mesh& mesh) { return mesh.number_of_vertices(); })
         .def_property_readonly("n_faces", [](const Mesh& mesh) { return mesh.number_of_faces(); })
         .def_property_readonly("n_edges", [](const Mesh& mesh) { return mesh.number_of_edges(); })
-        .def_property_readonly("n_halfedges", [](const Mesh& mesh) { return mesh.number_of_halfedges(); }
-        )
+        .def_property_readonly("n_halfedges", [](const Mesh& mesh) { return mesh.number_of_halfedges(); })
+        .def_property_readonly("points", [](const Mesh& mesh) { return mesh.points(); })
+
         .def_property_readonly("vertices", [](const Mesh& mesh) {
             std::vector<V> verts;
             verts.reserve(mesh.number_of_vertices());

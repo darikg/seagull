@@ -1,4 +1,4 @@
-#include "skgeom.hpp"
+#include "seagullmesh.hpp"
 
 
 template <typename Mesh, typename Key, typename Val>
@@ -89,7 +89,7 @@ void define_mesh_properties(py::module &m, std::string name) {
     define_property_map<Mesh, F, ssize_t>(m, "FaceIntPropertyMap" + name);
     define_property_map<Mesh, E, bool>(m, "EdgeBoolPropertyMap" + name);
 
-    define_array3_property_map<Mesh, V, Point_3>(m, "VertPoint3PropertyMap" + name);
+    define_array3_property_map<Mesh, V, Point3>(m, "VertPoint3PropertyMap" + name);
     define_array3_property_map<Mesh, V, Vector3>(m, "VertVector3PropertyMap" + name);
 
     m.def("add_vertex_property", &add_property_map<Mesh, V, bool>)
@@ -102,5 +102,5 @@ void define_mesh_properties(py::module &m, std::string name) {
 void init_properties(py::module &m) {
     py::module sub = m.def_submodule("properties");
     define_mesh_properties<Mesh3, V3, F3, E3, H3>(sub, "3");
-    define_mesh_properties<Mesh2, V2, F2, E2, H2>(sub, "2");
+    // define_mesh_properties<Mesh2, V2, F2, E2, H2>(sub, "2");
 }
