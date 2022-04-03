@@ -112,6 +112,7 @@ ext_modules = [
     Extension(
         'seagullmesh._seagullmesh',
         [
+            'src/util.cpp',
             'src/seagullmesh.cpp',
             'src/mesh.cpp',
             'src/properties.cpp',
@@ -119,6 +120,7 @@ ext_modules = [
             'src/meshing.cpp',
             'src/locate.cpp',
             'src/parametrize.cpp',
+            'src/triangulate.cpp',
         ],
         include_dirs=include_dirs,
         library_dirs=library_dirs,

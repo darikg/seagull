@@ -1,4 +1,5 @@
 #include "seagullmesh.hpp"
+#include "util.hpp"
 
 #include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
 #include <CGAL/Polygon_mesh_processing/polygon_mesh_to_polygon_soup.h>
@@ -9,49 +10,18 @@
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 
-
-std::vector<Point3> array_to_points_3(const py::array_t<double> &verts) {
-    auto v = verts.unchecked<2>();
-    if (v.shape(1) != 3) {
-        throw std::runtime_error("vertices need to be 3 dimensional");
-    }
-    const ssize_t nv = v.shape(0);
-    std::vector<Point3> points;
-    points.reserve(nv);
-    for (ssize_t i = 0; i < nv; i++) {
-        points.emplace_back(Point3(v(i, 0), v(i, 1), v(i, 2)));
-    }
-    return points;
-}
-
-std::vector<Point2> array_to_points_2(const py::array_t<double> &verts) {
-    auto v = verts.unchecked<2>();
-    if (v.shape(1) != 2) {
-        throw std::runtime_error("vertices need to be 2 dimensional");
-    }
-    const ssize_t nv = v.shape(0);
-    std::vector<Point2> points;
-    points.reserve(nv);
-    for (ssize_t i = 0; i < nv; i++) {
-        points.emplace_back(Point2(v(i, 0), v(i, 1)));
-    }
-    return points;
-}
-
 template<typename T>
 auto define_simple_type_3(py::module &m, std::string name) {
-    py::class_<T>(m, name.c_str())
-        .def(py::init<>([](double x, double y, double z) {
-            return T(x, y, z);
-        }));
+    py::class_<T>(m, name.c_str(), py::module_local())
+        .def(py::init<double, double, double>())
+    ;
 }
 
 template<typename T>
 auto define_simple_type_2(py::module &m, std::string name) {
-    py::class_<T>(m, name.c_str())
-        .def(py::init<>([](double x, double y) {
-            return T(x, y);
-        }));
+    py::class_<T>(m, name.c_str(), py::module_local())
+        .def(py::init<double, double>())
+    ;
 }
 
 
@@ -146,9 +116,9 @@ void init_mesh(py::module &m) {
     py::module sub = m.def_submodule("mesh");
 
     define_simple_type_2<Point2>(sub, "Point2");
-    define_simple_type_3<Point3>(sub, "Point3");
-    define_simple_type_2<Vector2>(sub, "Vector2");
-    define_simple_type_3<Vector3>(sub, "Vector3");
+    // define_simple_type_3<Point3>(sub, "Point3");
+    // define_simple_type_2<Vector2>(sub, "Vector2");
+    // define_simple_type_3<Vector3>(sub, "Vector3");
 
     sub.def("polygon_soup_to_mesh3", [](
             py::array_t<double> &points, 

@@ -37,7 +37,7 @@ struct CorefinementVertexTracker : public PMP::Corefinement::Default_visitor<Mes
 void init_corefine(py::module &m) {
     py::module sub = m.def_submodule("corefine");
 
-    py::class_<CorefinementVertexTracker>(m, "CorefinementVertexTracker")
+    py::class_<CorefinementVertexTracker>(sub, "CorefinementVertexTracker")
         .def(py::init<Mesh3&, Mesh3&, VertexIndex&, VertexIndex&>())
     ;
 

@@ -7,6 +7,8 @@ from numpy import ndarray, zeros_like, array, sqrt, concatenate, repeat, ones
 from seagullmesh._seagullmesh.mesh import (  # noqa
     Mesh3 as _Mesh3,
     polygon_soup_to_mesh3,
+    Point2
+    # Point3
 )
 from seagullmesh import _seagullmesh as sgm
 
@@ -69,11 +71,11 @@ class Mesh3:
 
     def corefine_tracked(self, other: Mesh3, vert_idx: str, edge_constrained: str):
         tracker, ecm1, ecm2 = _get_corefined_properties(self, other, vert_idx, edge_constrained)
-        corefine.corefine(self._mesh, other._mesh, ecm1, ecm2, tracker)
+        sgm.corefine.corefine(self._mesh, other._mesh, ecm1, ecm2, tracker)
 
     def union_tracked(self, other: Mesh3, vert_idx: str, edge_constrained: str):
         tracker, ecm1, ecm2 = _get_corefined_properties(self, other, vert_idx, edge_constrained)
-        corefine.union(self._mesh, other._mesh, ecm1, ecm2, tracker)
+        sgm.corefine.union(self._mesh, other._mesh, ecm1, ecm2, tracker)
 
     def remesh(
             self,
@@ -85,32 +87,42 @@ class Mesh3:
     ):
         if touched_map:
             touched = self.vertex_data.get_or_create_property(touched_map, default=False)
-            meshing.remesh(self._mesh, faces, target_edge_length, n_iter, protect_constraints, touched)
+            sgm.meshing.remesh(self._mesh, faces, target_edge_length, n_iter, protect_constraints, touched)
         else:
-            meshing.remesh(self._mesh, faces, target_edge_length, n_iter, protect_constraints)
+            sgm.meshing.remesh(self._mesh, faces, target_edge_length, n_iter, protect_constraints)
 
     def fair(self, verts, continuity=0):
-        meshing.fair(self._mesh, verts, continuity)
+        sgm.meshing.fair(self._mesh, verts, continuity)
 
     def refine(self, faces, density=sqrt(3)):
-        return meshing.refine(self._mesh, faces, density)
+        return sgm.meshing.refine(self._mesh, faces, density)
 
     def aabb_tree(self, points: Optional[str] = None):
         if points:
-            return self._mesh.aabb_tree(self.vertex_data['points'])
+            return sgm.locate.aabb_tree(self._mesh, self.vertex_data[points])
         else:
             return self._mesh.aabb_tree()
 
-    def locate_points(self):
-        pass
+    def locate_points(self, points: ndarray, aabb_tree=None):
+        tree = aabb_tree or self.aabb_tree()
+        return self._mesh.locate_points(tree, points)
 
+    def construct_points(self, faces, bary_coords: ndarray) -> ndarray:
+        return self._mesh.construct_points(faces, bary_coords)
 
+    def lscm(self, uv_map: str):
+        uv_map = self.vertex_data.get_or_create_property(uv_map, default=Point2(0, 0))
+        sgm.parametrize.lscm(self._mesh, uv_map)
+
+    def arap(self, uv_map: str):
+        uv_map = self.vertex_data.get_or_create_property(uv_map, default=Point2(0, 0))
+        sgm.parametrize.arap(self._mesh, uv_map)
 
 
 def _get_corefined_properties(mesh1: Mesh3, mesh2: Mesh3, vert_idx: str, edge_constrained: str):
     vert_idx1 = mesh1.vertex_data.get_or_create_property(vert_idx, default=-1)
     vert_idx2 = mesh2.vertex_data.get_or_create_property(vert_idx, default=-1)
-    tracker = corefine.CorefinementVertexTracker(mesh1.mesh, mesh2.mesh, vert_idx1, vert_idx2)
+    tracker = sgm.CorefinementVertexTracker(mesh1.mesh, mesh2.mesh, vert_idx1, vert_idx2)
     ecm1 = mesh1.edge_data.get_or_create_property(edge_constrained, default=False)
     ecm2 = mesh2.edge_data.get_or_create_property(edge_constrained, default=False)
     return tracker, ecm1, ecm2
