@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import ABC
 from typing import Generic, TypeVar, Any, Optional, Dict, TYPE_CHECKING
 
-from numpy import ndarray, zeros_like, array, sqrt
+from numpy import ndarray, zeros_like, array, sqrt, concatenate, repeat, ones
 
 from seagullmesh._seagullmesh.mesh import (  # noqa
     Mesh3 as _Mesh3,
@@ -18,7 +18,7 @@ class Mesh3:
     def __init__(self, mesh: Mesh3):
         self._mesh = mesh
         self.vertex_data = MeshData(mesh, sgm.properties.add_vertex_property, 'vertices')
-        self.edge_data = MeshData(mesh, properties.add_edge_property, 'edges')
+        self.edge_data = MeshData(mesh, sgm.properties.add_edge_property, 'edges')
 
     mesh = property(lambda self: self._mesh)
 
@@ -51,6 +51,13 @@ class Mesh3:
     def from_polygon_soup(verts: ndarray, faces: ndarray, orient=True) -> Mesh3:
         mesh = polygon_soup_to_mesh3(verts, faces, orient)
         return Mesh3(mesh)
+
+    def to_pyvista(self) -> pv.PolyData:
+        from pyvista import PolyData  # noqa
+        verts, _faces = self._mesh.to_polygon_soup()
+        faces = concatenate([3 * ones((_faces.shape[0], 1), dtype='int'), _faces.astype('int')], axis=1)
+        mesh = PolyData(verts, faces=faces.reshape(-1))
+        return mesh
 
     @staticmethod
     def from_pyvista(polydata: pv.PolyData, orient=True) -> Mesh3:
