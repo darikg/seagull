@@ -1,19 +1,21 @@
 from __future__ import annotations
 from abc import ABC
-from typing import Generic, TypeVar, Any, Optional, Dict, TYPE_CHECKING
+from typing import Generic, TypeVar, Any, Optional, Dict, TYPE_CHECKING, Union, Sequence
 
 from numpy import ndarray, zeros_like, array, sqrt, concatenate, repeat, ones
 
 from seagullmesh._seagullmesh.mesh import (  # noqa
     Mesh3 as _Mesh3,
     polygon_soup_to_mesh3,
-    Point2
-    # Point3
+    Point2, Point3, Vector2, Vector3,
+    Vertex, Face, Edge, Halfedge,
 )
 from seagullmesh import _seagullmesh as sgm
 
 if TYPE_CHECKING:
     import pyvista as pv  # noqa
+
+A = ndarray
 
 
 class Mesh3:
@@ -46,7 +48,7 @@ class Mesh3:
     def to_polygon_soup(self):
         return self._mesh.to_polygon_soup()
 
-    def face_normals(self, faces):
+    def face_normals(self, faces: Sequence[Face]):
         return self._mesh.face_normals(faces)
 
     @staticmethod
@@ -101,14 +103,17 @@ class Mesh3:
         if points:
             return sgm.locate.aabb_tree(self._mesh, self.vertex_data[points])
         else:
-            return self._mesh.aabb_tree()
+            return sgm.locate.aabb_tree(self._mesh)
 
     def locate_points(self, points: ndarray, aabb_tree=None):
         tree = aabb_tree or self.aabb_tree()
-        return self._mesh.locate_points(tree, points)
+        return sgm.locate.locate_points(self._mesh, tree, points)
 
-    def construct_points(self, faces, bary_coords: ndarray) -> ndarray:
-        return self._mesh.construct_points(faces, bary_coords)
+    def shortest_path_barycentric(self, src_face: Face, src_bc: A, tgt_face: Face, tgt_bc: A):
+        return sgm.locate.shortest_path(self._mesh, src_face, src_bc, tgt_face, tgt_bc)
+
+    def construct_points(self, faces: Sequence[Face], bary_coords: A) -> A:
+        return sgm.locate.construct_points(self._mesh, faces, bary_coords)
 
     def lscm(self, uv_map: str):
         uv_map = self.vertex_data.get_or_create_property(uv_map, default=Point2(0, 0))
@@ -118,11 +123,15 @@ class Mesh3:
         uv_map = self.vertex_data.get_or_create_property(uv_map, default=Point2(0, 0))
         sgm.parametrize.arap(self._mesh, uv_map)
 
+    def estimate_geodesic_distances(self, src: Union[Vertex, Sequence[Vertex]], distance_prop: str):
+        distances = self.vertex_data.get_or_create_property(distance_prop, default=0.0)
+        self._mesh.estimate_geodesic_distances(distances, src)
+
 
 def _get_corefined_properties(mesh1: Mesh3, mesh2: Mesh3, vert_idx: str, edge_constrained: str):
     vert_idx1 = mesh1.vertex_data.get_or_create_property(vert_idx, default=-1)
     vert_idx2 = mesh2.vertex_data.get_or_create_property(vert_idx, default=-1)
-    tracker = sgm.CorefinementVertexTracker(mesh1.mesh, mesh2.mesh, vert_idx1, vert_idx2)
+    tracker = sgm.corefine.CorefinementVertexTracker(mesh1.mesh, mesh2.mesh, vert_idx1, vert_idx2)
     ecm1 = mesh1.edge_data.get_or_create_property(edge_constrained, default=False)
     ecm2 = mesh2.edge_data.get_or_create_property(edge_constrained, default=False)
     return tracker, ecm1, ecm2

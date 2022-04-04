@@ -7,6 +7,7 @@
 #include <CGAL/Polygon_mesh_processing/triangulate_hole.h>
 #include <CGAL/Surface_mesh/IO/PLY.h>
 #include <CGAL/Surface_mesh/IO/OFF.h>
+#include <CGAL/Heat_method_3/Surface_mesh_geodesic_distances_3.h>
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 
@@ -116,9 +117,9 @@ void init_mesh(py::module &m) {
     py::module sub = m.def_submodule("mesh");
 
     define_simple_type_2<Point2>(sub, "Point2");
-    // define_simple_type_3<Point3>(sub, "Point3");
-    // define_simple_type_2<Vector2>(sub, "Vector2");
-    // define_simple_type_3<Vector3>(sub, "Vector3");
+    define_simple_type_3<Point3>(sub, "Point3");
+    define_simple_type_2<Vector2>(sub, "Vector2");
+    define_simple_type_3<Vector3>(sub, "Vector3");
 
     sub.def("polygon_soup_to_mesh3", [](
             py::array_t<double> &points, 
@@ -184,6 +185,13 @@ void init_mesh(py::module &m) {
                 }
             }
             return normals;
+        })
+        .def("estimate_geodesic_distances", [](const Mesh3& mesh, Mesh3::Property_map<V3, double>& distances, V3 source) {
+            CGAL::Heat_method_3::estimate_geodesic_distances(mesh, distances, source);
+        })
+        .def("estimate_geodesic_distances", [](
+                const Mesh3& mesh, Mesh3::Property_map<V3, double>& distances, const std::vector<V3>& sources) {
+            CGAL::Heat_method_3::estimate_geodesic_distances(mesh, distances, sources);
         })
     ;
 
