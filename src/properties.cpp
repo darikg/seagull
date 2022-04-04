@@ -48,7 +48,7 @@ auto define_property_map(py::module &m, std::string name) {
 
 
 template <typename Mesh, typename Key, typename Val>
-void define_array3_property_map(py::module &m, std::string name) {
+void define_array_3_property_map(py::module &m, std::string name) {
     using PMap = typename Mesh::Property_map<Key, Val>;
 
     define_property_map<Mesh, Key, Val>(m, name)
@@ -72,7 +72,7 @@ void define_array3_property_map(py::module &m, std::string name) {
                 throw std::runtime_error("Key and value array sizes do not match");
             }
             if (3 != r.shape(1)) {
-                throw std::runtime_error("Expected a 3 dimensions");
+                throw std::runtime_error("Expected an array with 3 columns");
             }
             for (auto i = 0; i < nk; i++) {
                 pmap[keys[i]] = Val(r(i, 0), r(i, 1), r(i, 2));
@@ -81,21 +81,66 @@ void define_array3_property_map(py::module &m, std::string name) {
     ;
 }
 
+template <typename Mesh, typename Key, typename Val>
+void define_array_2_property_map(py::module &m, std::string name) {
+    using PMap = typename Mesh::Property_map<Key, Val>;
+
+    define_property_map<Mesh, Key, Val>(m, name)
+        .def("get_array", [](const PMap& pmap, const std::vector<Key>& keys) {
+            const size_t nk = keys.size();
+            py::array_t<double, py::array::c_style> vals({nk, size_t(2)});
+            auto r = vals.mutable_unchecked<2>();
+
+            for (auto i = 0; i < nk; i++) {
+                auto val = pmap[keys[i]];
+                for (auto j = 0; j < 2; j++) {
+                    r(i, j) = val[j];
+                }
+            }
+            return vals;
+        })
+        .def("set_array", [](PMap& pmap, const std::vector<Key>& keys, const py::array_t<double>& vals) {
+            const size_t nk = keys.size();
+            auto r = vals.unchecked<2>();
+            if (nk != r.shape(0)) {
+                throw std::runtime_error("Key and value array sizes do not match");
+            }
+            if (2 != r.shape(1)) {
+                throw std::runtime_error("Expected an array with 2 columns");
+            }
+            for (auto i = 0; i < nk; i++) {
+                pmap[keys[i]] = Val(r(i, 0), r(i, 1));
+            }
+        })
+    ;
+}
+
 template<typename Mesh, typename V, typename F, typename E, typename H>
 void define_mesh_properties(py::module &m, std::string name) {
-    define_property_map<Mesh, V, bool>(m, "VertBoolPropertyMap" + name);
-    define_property_map<Mesh, V, ssize_t>(m, "VertIntPropertyMap" + name);
-    define_property_map<Mesh, F, bool>(m, "FaceBoolPropertyMap" + name);
-    define_property_map<Mesh, F, ssize_t>(m, "FaceIntPropertyMap" + name);
-    define_property_map<Mesh, E, bool>(m, "EdgeBoolPropertyMap" + name);
+    define_property_map        < Mesh, V, bool     >(m, "VertBoolPropertyMap"    + name);
+    define_property_map        < Mesh, V, ssize_t  >(m, "VertIntPropertyMap"     + name);
+    define_array_3_property_map< Mesh, V, Point3   >(m, "VertPoint3PropertyMap"  + name);
+    define_array_3_property_map< Mesh, V, Vector3  >(m, "VertVector3PropertyMap" + name);
+    define_array_2_property_map< Mesh, V, Point2   >(m, "VertPoint2PropertyMap"  + name);
+    define_array_2_property_map< Mesh, V, Vector2  >(m, "VertVector2PropertyMap" + name);
 
-    define_array3_property_map<Mesh, V, Point3>(m, "VertPoint3PropertyMap" + name);
-    define_array3_property_map<Mesh, V, Vector3>(m, "VertVector3PropertyMap" + name);
+    define_property_map<         Mesh, F, bool     >(m, "FaceBoolPropertyMap"    + name);
+    define_property_map<         Mesh, F, ssize_t  >(m, "FaceIntPropertyMap"     + name);
+    define_property_map<         Mesh, E, bool     >(m, "EdgeBoolPropertyMap"    + name);
+
+
 
     m.def("add_vertex_property", &add_property_map<Mesh, V, bool>)
      .def("add_vertex_property", &add_property_map<Mesh, V, ssize_t>)
+
+     .def("add_vertex_property", &add_property_map<Mesh, V, Point3>)
+     .def("add_vertex_property", &add_property_map<Mesh, V, Vector3>)
+     .def("add_vertex_property", &add_property_map<Mesh, V, Point2>)
+     .def("add_vertex_property", &add_property_map<Mesh, V, Vector2>)
+
      .def("add_face_property", &add_property_map<Mesh, F, bool>)
      .def("add_face_property", &add_property_map<Mesh, F, ssize_t>)
+
      .def("add_edge_property", &add_property_map<Mesh, E, bool>);
 }
 
