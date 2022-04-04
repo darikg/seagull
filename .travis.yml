@@ -33,7 +33,7 @@ install:
         export CXX=clang++ CC=clang;
       fi
     # Install host dependencies
-    - conda install cgal-cpp pybind11 matplotlib -c conda-forge
+    - conda install cgal-cpp pybind11 eigen -c conda-forge
     # Install build dependencies
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
         conda install gxx_linux-64 libgcc -c conda-forge;
@@ -43,4 +43,4 @@ install:
     # Build
     - python -m pip install -e . -vvv
 script:
-    - echo -e "import skgeom; print(skgeom.Point2(0, 5))" | python
+    - echo -e "from seagullmesh._seagullmesh.mesh import Mesh3; print(Mesh3)" | python
