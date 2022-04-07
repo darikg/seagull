@@ -34,22 +34,31 @@ void init_mesh(py::module &m) {
     define_simple_type_3<Vector3>(sub, "Vector3");
 
     sub.def("polygon_soup_to_mesh3", [](
-            py::array_t<double> &points, 
-            std::vector<std::vector<size_t>>& faces, 
-            const bool orient) {
+                py::array_t<double> &points,
+                std::vector<std::vector<size_t>>& faces,
+                const bool orient
+        ) {
+            Mesh3 mesh;
+            std::vector<Point3> vertices = array_to_points_3(points);
 
-        Mesh3 mesh;
-        std::vector<Point3> vertices = array_to_points_3(points);
-
-        if (orient) {
-            bool success = PMP::orient_polygon_soup(vertices, faces);
-            if (!success) {
-                throw std::runtime_error("Polygon orientation failed");
+            if (orient) {
+                bool success = PMP::orient_polygon_soup(vertices, faces);
+                if (!success) {
+                    throw std::runtime_error("Polygon orientation failed");
+                }
             }
-        }
-        PMP::polygon_soup_to_polygon_mesh(vertices, faces, mesh);
-        return mesh;
-    });
+            PMP::polygon_soup_to_polygon_mesh(vertices, faces, mesh);
+            return mesh;
+        })
+        .def("load_mesh_from_file", [](const std::string filename) {
+            Mesh3 mesh;
+            if(!CGAL::IO::read_polygon_mesh(filename, mesh)) {
+                throw std::runtime_error("Failed to load mesh");
+            }
+            return mesh;
+        })
+    ;
+
 
     py::class_<V3>(sub, "Vertex");
     py::class_<F3>(sub, "Face");
@@ -144,6 +153,7 @@ void init_mesh(py::module &m) {
             PMP::polygon_mesh_to_polygon_soup(mesh, verts, faces);
 
             // convert points to arrays
+            // todo use util
             const size_t nv = mesh.number_of_vertices();
             py::array_t<double, py::array::c_style> verts_out({nv, size_t(3)});
             auto rv = verts_out.mutable_unchecked<2>();
@@ -184,6 +194,22 @@ void init_mesh(py::module &m) {
         .def("estimate_geodesic_distances", [](
                 const Mesh3& mesh, Mesh3::Property_map<V3, double>& distances, const std::vector<V3>& sources) {
             CGAL::Heat_method_3::estimate_geodesic_distances(mesh, distances, sources);
+        })
+
+        .def("write_ply", [](Mesh3& mesh, std::string file) {
+            std::ofstream out(file, std::ios::binary);
+            CGAL::IO::set_binary_mode(out);
+            bool success = CGAL::IO::write_PLY(out, mesh, "");
+            if (!success) {
+                throw std::runtime_error("writing failed");
+            }
+        })
+        .def("write_off", [](Mesh3& mesh, std::string file) {
+            std::ofstream out(file);
+            bool success = CGAL::IO::write_OFF(out, mesh);
+            if (!success) {
+                throw std::runtime_error("writing failed");
+            }
         })
     ;
 

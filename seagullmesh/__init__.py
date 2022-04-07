@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Optional, TYPE_CHECKING, Union, Sequence, Protocol, TypeVar, overload, Tuple
 
 from numpy import ndarray, zeros_like, array, sqrt, concatenate, ones
 from seagullmesh._seagullmesh.mesh import (  # noqa
     Mesh3 as _Mesh3,
     polygon_soup_to_mesh3,
+    load_mesh_from_file,
     Point2, Point3, Vector2, Vector3,
     Vertex, Face, Edge, Halfedge,
 )
@@ -76,16 +78,19 @@ class Mesh3:
         mesh = polygon_soup_to_mesh3(verts, faces, orient)
         return Mesh3(mesh)
 
-    def to_pyvista(self) -> pv.PolyData:
-        """Returns the mesh as a `pyvista.PolyData` object.
+    @staticmethod
+    def from_file(filename: str) -> Mesh3:
+        mesh = load_mesh_from_file(filename)
+        return Mesh3(mesh)
 
-        Currently, all vertex/face/edge/halfedge data is ignored.
-        """
-        from pyvista import PolyData  # noqa
-        verts, _faces = self._mesh.to_polygon_soup()
-        faces = concatenate([3 * ones((_faces.shape[0], 1), dtype='int'), _faces.astype('int')], axis=1)
-        mesh = PolyData(verts, faces=faces.reshape(-1))
-        return mesh
+    def to_file(self, filename: str):
+        ext = Path(filename).suffix
+        if ext == '.ply':
+            self._mesh.write_ply(filename)
+        elif ext == '.off':
+            self._mesh.write_off(filename)
+        else:
+            raise ValueError(f"Unsupported format '{ext}'")
 
     @staticmethod
     def from_pyvista(polydata: pv.PolyData, orient=True) -> Mesh3:
@@ -99,20 +104,35 @@ class Mesh3:
         faces = cells.reshape(-1, 3)
         return Mesh3.from_polygon_soup(polydata.points, faces, orient=orient)
 
+    def to_pyvista(self) -> pv.PolyData:
+        """Returns the mesh as a `pyvista.PolyData` object.
+
+        Currently, all vertex/face/edge/halfedge data is ignored.
+        """
+        from pyvista import PolyData  # noqa
+        verts, _faces = self._mesh.to_polygon_soup()
+        faces = concatenate([3 * ones((_faces.shape[0], 1), dtype='int'), _faces.astype('int')], axis=1)
+        mesh = PolyData(verts, faces=faces.reshape(-1))
+        return mesh
+
     def corefine(self, other: Mesh3) -> None:
+        """Corefines the two meshes in place"""
         sgm.corefine.corefine(self._mesh, other._mesh)
 
     def union(self, other: Mesh3, inplace=False) -> Mesh3:
+        """Corefines the two meshes and returns their boolean union"""
         out = self if inplace else Mesh3(_Mesh3())
         sgm.corefine.union(self._mesh, other._mesh, out._mesh)
         return out
 
     def difference(self, other: Mesh3, inplace=False) -> Mesh3:
+        """Corefines the two meshes and returns their boolean difference"""
         out = self if inplace else Mesh3(_Mesh3())
         sgm.corefine.difference(self._mesh, other._mesh, out._mesh)
         return out
 
     def intersection(self, other: Mesh3, inplace=False) -> Mesh3:
+        """Corefines the two meshes and returns their boolean intersection"""
         out = self if inplace else Mesh3(_Mesh3())
         sgm.corefine.intersection(self._mesh, other._mesh, out._mesh)
         return out
@@ -122,7 +142,7 @@ class Mesh3:
             other: Mesh3,
             vert_idx: Union[str, PropertyMap[Vertex, int]],
             edge_constrained: Union[str, PropertyMap[Edge, bool]],
-    ):
+    ) -> None:
         tracker, ecm1, ecm2 = _get_corefined_properties(self, other, vert_idx, edge_constrained)
         sgm.corefine.corefine(self._mesh, other._mesh, ecm1, ecm2, tracker)
 
@@ -131,7 +151,7 @@ class Mesh3:
             other: Mesh3,
             vert_idx: Union[str, PropertyMap[Vertex, int]],
             edge_constrained: Union[str, PropertyMap[Edge, bool]],
-    ):
+    ) -> None:
         tracker, ecm1, ecm2 = _get_corefined_properties(self, other, vert_idx, edge_constrained)
         sgm.corefine.union(self._mesh, other._mesh, ecm1, ecm2, tracker)
 
@@ -142,7 +162,7 @@ class Mesh3:
             n_iter: int,
             protect_constraints=False,
             touched_map: Optional[Union[str, PropertyMap[Vertex, bool]]] = None,
-    ):
+    ) -> None:
         """Perform isotropic remeshing on the specified faces.
 
         If an optional `touched_map` mapping vertices to bools is specified, vertices that were created or moved during
@@ -154,7 +174,7 @@ class Mesh3:
         else:
             sgm.meshing.remesh(self._mesh, faces, target_edge_length, n_iter, protect_constraints)
 
-    def fair(self, verts: Vertices, continuity=0):
+    def fair(self, verts: Vertices, continuity=0) -> None:
         """Fair the specified mesh vertices"""
         sgm.meshing.fair(self._mesh, verts, continuity)
 
@@ -165,6 +185,18 @@ class Mesh3:
         Returns indices to the newly created vertices and faces.
         """
         return sgm.meshing.refine(self._mesh, faces, density)
+
+    def smooth_mesh(self, faces: Faces, n_iter: int, use_safety_constraints=False) -> None:
+        """Smooth the specified faces"""
+        sgm.meshing.smooth_mesh(self._mesh, faces, n_iter, use_safety_constraints)
+
+    def smooth_shape(self, faces: Faces, time: float, n_iter: int) -> None:
+        """Smooth the mesh shape by mean curvature flow
+
+        A larger time step results in faster convergence but details may be distorted to a larger extent compared to
+         more iterations with a smaller step. Typical values scale in the interval (1e-6, 1]
+        """
+        sgm.meshing.smooth_shape(self._mesh, faces, time, n_iter)
 
     def aabb_tree(self, vert_points: Optional[Union[str, VertexPointMap]] = None):
         """Construct an axis-aligned bounding box tree for accelerated point location by `Mesh3.locate_points

@@ -10,8 +10,6 @@
 
 typedef std::vector<F3>         Faces3;
 typedef std::vector<V3>         Verts3;
-typedef std::vector<Point3>     Points3;
-typedef std::vector<Point2>     Points2;
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 typedef PMP::Barycentric_coordinates<Kernel::FT>    Barycentric_coordinates;
@@ -23,28 +21,6 @@ typedef Mesh3::Property_map<V3, Point2>             VertPoints2;
 typedef typename CGAL::AABB_face_graph_triangle_primitive<Mesh3>    AABB_primitive3;
 typedef typename CGAL::AABB_traits<Kernel, AABB_primitive3>         AABB_traits3;
 typedef typename CGAL::AABB_tree<AABB_traits3>                      AABB_Tree3;
-
-
-template<typename Point>
-py::array_t<double, py::array::c_style> points_d_to_array(const std::vector<Point>& points, const size_t ndims) {
-    const size_t np = points.size();
-    py::array_t<double, py::array::c_style> points_out({np, ndims});
-    auto r = points_out.mutable_unchecked<2>();
-    for (auto i = 0; i < np; i++) {
-        for (auto j = 0; j < ndims; j++) {
-            r(i, j) = CGAL::to_double(points[i][j]);
-        }
-    }
-    return points_out;
-}
-
-py::array_t<double, py::array::c_style> points_to_array(const Points3& points) {
-    return points_d_to_array<Point3>(points, 3);
-}
-
-py::array_t<double, py::array::c_style> points_to_array(const Points2& points) {
-    return points_d_to_array<Point2>(points, 2);
-}
 
 template<typename Point, typename VPM>
 auto construct_points(
