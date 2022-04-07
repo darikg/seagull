@@ -51,7 +51,7 @@ and are indexed with arrays of the indices described above.
 
 ```python
 mesh.vertex_data['foo'] = np.arange(mesh.n_vertices)  # Creates a new property
-mesh.vertex_data['foo'][mesh.vertices[:3]] = 0  # sub-indexing
+mesh.vertex_data['foo'][mesh.vertices[:3]] = [10, 11, 12]  # sub-indexing
 foo_vals = mesh.vertex_data['foo'][mesh.vertices]
 property_map = mesh.vertex_data.add_property('bar', default=1)  # Create a property map manually
 ```
@@ -75,8 +75,8 @@ From [PMP Meshing](https://doc.cgal.org/latest/Polygon_mesh_processing/group__PM
   - `mesh.remesh(faces, target_edge_length, n_iterations)`
   - `mesh.fair(vertices, fairing_continuity)`
   - `mesh.refine(faces, density)`
-  - `mesh.smooth_mesh(mesh, faces, n_iterations)  TODO`
-  - `mesh.smooth_shape(mesh, faces, time)  TODO`
+  - `mesh.smooth_mesh(mesh, faces, n_iterations)`
+  - `mesh.smooth_shape(mesh, faces, time)`
 
 From [PMP Corefinement and Boolean Operations](https://doc.cgal.org/latest/Polygon_mesh_processing/group__PMP__corefinement__grp.html)
   - `mesh.corefine(other)`  # TODO ALL

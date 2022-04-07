@@ -286,7 +286,7 @@ def _get_corefined_properties(mesh1: Mesh3, mesh2: Mesh3, vert_idx: str, edge_co
 
 
 Key = TypeVar('Key', Vertex, Face, Edge, Halfedge)
-Val = Union[int, bool, Point2, Point3, Vector2, Vector3]
+Val = TypeVar('Val', int, bool, Point2, Point3, Vector2, Vector3)
 
 
 class PropertyMap(Protocol[Key, Val]):
@@ -318,6 +318,14 @@ class MeshData:
         self._add_fn = add_fn
         self._key_name = key_name
 
+    @property
+    def mesh_keys(self):
+        return getattr(self._mesh, self._key_name)
+
+    @property
+    def n_mesh_keys(self) -> int:
+        return getattr(self._mesh, f'n_{self._key_name}')
+
     def add_property(self, key: str, default: Any):
         pmap = self._add_fn(self._mesh, key, default)
         self._data[key] = pmap
@@ -340,5 +348,4 @@ class MeshData:
     def __setitem__(self, key: str, value: ndarray):
         default = zeros_like(value, shape=()).item()
         pmap = self.get_or_create_property(key, default)
-        keys = getattr(self._mesh, self._key_name)
-        pmap[keys] = value
+        pmap[self.mesh_keys] = value

@@ -18,7 +18,8 @@ auto define_property_map(py::module &m, std::string name) {
     using PMap = typename Mesh::Property_map<Key, Val>;
     return py::class_<PMap>(m, name.c_str(), py::buffer_protocol(), py::dynamic_attr())
         .def("__getitem__", [](const PMap& pmap, const Key& key) {
-            return pmap[key];
+            Val val = pmap[key];
+            return val;
         })
         .def("__getitem__", [](const PMap& pmap, const std::vector<Key>& keys) {
             size_t nk = keys.size();
@@ -148,8 +149,8 @@ void define_mesh_properties(py::module &m, std::string name) {
      .def("add_edge_property", &add_property_map<Mesh, E, bool>)
      .def("add_edge_property", &add_property_map<Mesh, E, ssize_t>)
 
-     .def("add_halfedge_property", &add_property_map<Mesh, E, bool>)
-     .def("add_halfedge_property", &add_property_map<Mesh, E, ssize_t>)
+     .def("add_halfedge_property", &add_property_map<Mesh, H, bool>)
+     .def("add_halfedge_property", &add_property_map<Mesh, H, ssize_t>)
     ;
 }
 

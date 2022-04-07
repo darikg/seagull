@@ -1,12 +1,14 @@
 import pytest
 import os
 
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, TemporaryFile
+from pathlib import Path
+
 import numpy as np
-from numpy import array, cos, sin,  pi, ones, arange, uint64
+from numpy import array, cos, sin,  pi, ones, arange, uint64, full, zeros
 from numpy.testing import assert_array_equal
 
-from skgeom.mesh import Mesh
+from seagullmesh import Mesh3, MeshData
 
 
 def tetrahedron(scale=1.0, rot_z=0.0):
@@ -17,36 +19,72 @@ def tetrahedron(scale=1.0, rot_z=0.0):
         verts = verts @ rot.T
 
     faces = array([[2, 1, 0], [2, 3, 1], [3, 2, 0], [1, 3, 0]], dtype='int')
-
-    return Mesh.from_polygon_soup(verts, faces, orient=True)
-    # return verts, faces
+    return verts, faces
 
 
-@pytest.fixture
-def mesh():
-    return tetrahedron()
+def test_from_polygon_soup():
+    verts, faces = tetrahedron()
+    mesh = Mesh3.from_polygon_soup(verts, faces)
+    assert mesh.n_vertices == 4 and mesh.n_faces == 4
 
 
-# @pytest.mark.parametrize('mesh', [tetrahedron(), triangle()])
-# def test_property(mesh):
-#     mesh.vertex_data['foo'] = arange(mesh.n_vertices)
-#     verts = mesh.vertices
-#     assert mesh.vertex_data['foo'][verts[0]] == 0
-#     assert mesh.vertex_data['foo'][verts[1]] == 1
-#
-#     mesh.vertex_data['foo'] = 1 + arange(mesh.n_vertices)
-#     assert mesh.vertex_data['foo'][verts[0]] == 1
-#     assert mesh.vertex_data['foo'][verts[1]] == 2
+@pytest.mark.parametrize('file', ['armadillo.off', 'sphere.ply'])
+def test_from_ply(file):
+    file = Path(__file__).parent / 'assets' / file
+    assert file.exists()
+    mesh = Mesh3.from_file(str(file))
 
 
-# def test_corefine():
-#     from skgeom._skgeom.mesh import Mesh3
-#     m1 = tetrahedron()
-#     nv0 = m1.n_vertices
-#     m2 = tetrahedron(scale=0.9, rot_z=pi/3)
-#     ecm = m1.edge_data.add_property('ecm', False)
-#     m1.corefine(m2, dict(edge_is_constrained_map='ecm'))
-#     nv1 = m1.n_vertices
-#     assert nv1 > nv0
-#     assert ecm[m1.edges].any()
+@pytest.mark.parametrize('ext', ['ply', 'off'])
+def test_to_file(ext):
+    mesh = Mesh3.from_polygon_soup(*tetrahedron())
+    with TemporaryDirectory() as d:
+        file = str(Path(d) / f'mesh.{ext}')
+        mesh.to_file(file)
 
+
+def test_pyvista_roundtrip():
+    from pyvista import Sphere
+    pvmesh0 = Sphere().clean().triangulate()
+    mesh = Mesh3.from_pyvista(pvmesh0)
+    pvmesh1 = mesh.to_pyvista()
+
+
+@pytest.mark.parametrize('key_type', ['vertex', 'face', 'edge', 'halfedge'])
+@pytest.mark.parametrize('val_type', [int, bool])
+def test_scalar_properties(key_type, val_type):
+    mesh = Mesh3.from_polygon_soup(*tetrahedron())
+    d: MeshData = getattr(mesh, key_type + '_data')
+
+    d['foo'] = full(d.n_mesh_keys, val_type(0))
+
+    keys = d.mesh_keys
+    key = keys[0]
+    d['foo'][key] = val_type(1)
+    val = d['foo'][key]
+    assert val == val_type(1)
+
+    d['foo'][keys[:2]] = [val_type(1), val_type(1)]
+    assert d['foo'][keys[0]] == val_type(1) and d['foo'][keys[1]] == val_type(1)
+
+
+def corefine_meshes():
+    m1 = Mesh3.from_polygon_soup(*tetrahedron())
+    m2 = Mesh3.from_polygon_soup(*tetrahedron(scale=0.9, rot_z=pi/3))
+    return m1, m2
+
+
+def test_corefine():
+    m1, m2 = corefine_meshes()
+    nv1_orig, nv2_orig = m1.n_vertices, m2.n_vertices
+    m1.corefine(m2)
+
+    nv1, nv2 = m1.n_vertices, m2.n_vertices
+    assert nv1 > nv1_orig and nv2 > nv2_orig
+
+
+@pytest.mark.parametrize('op', ['union', 'intersection', 'difference'])
+@pytest.mark.parametrize('inplace', [False, True])
+def test_boolean_ops(op, inplace):
+    m1, m2 = corefine_meshes()
+    m3 = getattr(m1, op)(m2, inplace=inplace)
