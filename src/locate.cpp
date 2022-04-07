@@ -46,7 +46,13 @@ py::array_t<double, py::array::c_style> points_to_array(const Points2& points) {
     return points_d_to_array<Point2>(points, 2);
 }
 
-auto construct_points(const Mesh3& mesh, const std::vector<F3>& faces, const py::array_t<double>& bary_coords) {
+template<typename Point, typename VPM>
+auto construct_points(
+        const Mesh3& mesh,
+        const std::vector<F3>& faces,
+        const py::array_t<double>& bary_coords,
+        const VPM& vertex_point_map
+) {
     size_t nf = faces.size();
     auto rbc = bary_coords.unchecked<2>();
     size_t nb = rbc.shape(0);
@@ -54,13 +60,14 @@ auto construct_points(const Mesh3& mesh, const std::vector<F3>& faces, const py:
         throw std::runtime_error("number of faces doesn't match number of points");
     }
 
-    std::vector<Point3> points;
+    std::vector<Point> points;
     points.reserve(nf);
+    auto params = CGAL::parameters::vertex_point_map(vertex_point_map);
 
     for (auto i = 0; i < nf; i++) {
         Barycentric_coordinates bc = {rbc(i, 0), rbc(i, 1), rbc(i, 2)};
         FaceLocation loc = {faces[i], bc};
-        auto pt = PMP::construct_point(loc, mesh);
+        auto pt = PMP::construct_point(loc, mesh, params);
         points.emplace_back(pt);
     }
     return points_to_array(points);
@@ -129,8 +136,7 @@ void init_locate(py::module &m) {
 
     py::class_<AABB_Tree3>(sub, "AABB_Tree3");
 
-    sub.def("construct_points", &construct_points)
-        .def("aabb_tree", [](const Mesh3& mesh) {
+    sub.def("aabb_tree", [](const Mesh3& mesh) {
             AABB_Tree3 tree;
             PMP::build_AABB_tree(mesh, tree);
             return tree;
@@ -170,6 +176,30 @@ void init_locate(py::module &m) {
         ) {
             auto pts = array_to_points_2(points);
             return locate_points(mesh, tree, pts, vertex_point_map);
+        })
+        .def("construct_points", [](
+                const Mesh3& mesh,
+                const std::vector<F3>& faces,
+                const py::array_t<double>& bary_coords,
+                const VertPoints3& vertex_point_map
+        ){
+            return construct_points<Point3, VertPoints3>(mesh, faces, bary_coords, mesh.points());
+        })
+        .def("construct_points", [](
+                const Mesh3& mesh,
+                const std::vector<F3>& faces,
+                const py::array_t<double>& bary_coords,
+                const VertPoints3& vertex_point_map
+        ){
+            return construct_points<Point3, VertPoints3>(mesh, faces, bary_coords, vertex_point_map);
+        })
+        .def("construct_points", [](
+                const Mesh3& mesh,
+                const std::vector<F3>& faces,
+                const py::array_t<double>& bary_coords,
+                const VertPoints2& vertex_point_map
+        ){
+            return construct_points<Point2, VertPoints2>(mesh, faces, bary_coords, vertex_point_map);
         })
         .def("shortest_path", [](
                 const Mesh3& mesh,
