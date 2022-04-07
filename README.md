@@ -2,13 +2,24 @@
 
 Convenience bindings to CGAL's [Surface Mesh](https://doc.cgal.org/latest/Surface_mesh/index.html)
  and [Polygon Mesh Processing](https://doc.cgal.org/latest/Polygon_mesh_processing/index.html) modules, plus some other 
-extras.
+assorted extras.
 
 ## Installation
 
 ```shell
 conda create --name seagull -c conda-forge cgal-cpp eigen pybind11 pyvista  # (pyvista optional)
 conda activate seagull
+```
+
+On linux, you'll also need
+
+```shell
+conda install -c conda-forge gxx_linux-64 libgcc
+```
+
+Finally, 
+
+```shell
 git clone git@github.com:darikg/seagull.git
 pip install -vv ./seagull 
 ```
@@ -17,12 +28,7 @@ pip install -vv ./seagull
 
 ### Overview
 
-This package provides bindings to the `Surface_mesh<Point_3>` class using 
-`Exact_predicates_inexact_constructions_kernel`. Because CGAL is a heavily templated library, only a few convenience 
-binds for most overloaded methods 
-bindings are available, more added as-needed. To simplify some of the python/C++ mappings, the bound classes and 
-methods are 
-further wrapped in a python layer.
+This package provides bindings to the `Surface_mesh<Point_3>` class using `Exact_predicates_inexact_constructions_kernel`. Because CGAL is a heavily templated library, only a few convenience bindings per overloaded method are available, more added as-needed. To simplify some of the python/C++ mappings, the bound classes and methods are further wrapped in a python layer.
 
 ### Mesh IO
 
@@ -39,15 +45,11 @@ with the corresponding output methods `mesh.to_polygon_soup`, `mesh.to_file`, `m
 
 ### Mesh indices
 
-CGAL indices `Surface_mesh::vertex_index`, `::edge_index`, `::face_index`, `::edge_index`, and `::halfedge_index` 
-are exposed in the python properties `mesh.vertices`, `.faces`, `.edges`, and `.halfedges`, which are returned as 
-numpy arrays of indices for convenience. These arrays are used for indexing property maps and specifying regions for 
-further processing. (See below.)
+CGAL indices `Surface_mesh::vertex_index`, `::edge_index`, `::face_index`, `::edge_index`, and `::halfedge_index` are exposed in the python properties `mesh.vertices`, `.faces`, `.edges`, and `.halfedges`, which are returned as numpy arrays of indices for convenience. These arrays are used for indexing property maps and specifying regions for further processing. (See below.)
 
 ### Mesh property maps
 
-Property maps are stored in the python properties `mesh.vertex_data`, `.edge_data`, etc., which acts as python dicts 
-and are indexed with arrays of the indices described above.
+Property maps are stored in the python properties `mesh.vertex_data`, `.edge_data`, etc., which acts as python dicts and are indexed with arrays of the indices described above.
 
 ```python
 mesh.vertex_data['foo'] = np.arange(mesh.n_vertices)  # Creates a new property
@@ -56,9 +58,7 @@ foo_vals = mesh.vertex_data['foo'][mesh.vertices]
 property_map = mesh.vertex_data.add_property('bar', default=1)  # Create a property map manually
 ```
 
-Non-scalar valued properties are supported in the form of CGAL's `Point_2`, `Point_3`, `Vector_2`, `Vector_3`objects.
-These property maps require some special handling for transforming to/from numpy arrays in the form of the 
-`set_array`/`get_array` instead of direct indexing.
+Non-scalar valued properties are supported in the form of CGAL's `Point_2`, `Point_3`, `Vector_2`, `Vector_3`objects. These property maps require some special handling for transforming to/from numpy arrays in the form of the`set_array`/`get_array` instead of direct indexing.
 
 ```python
 from seagullmesh import Point2
@@ -79,7 +79,7 @@ From [PMP Meshing](https://doc.cgal.org/latest/Polygon_mesh_processing/group__PM
   - `mesh.smooth_shape(mesh, faces, time)`
 
 From [PMP Corefinement and Boolean Operations](https://doc.cgal.org/latest/Polygon_mesh_processing/group__PMP__corefinement__grp.html)
-  - `mesh.corefine(other)`  # TODO ALL
+  - `mesh.corefine(other)`
   - `mesh.union(other)`
   - `mesh.difference(other)`
   - `mesh.intersection(other)`
