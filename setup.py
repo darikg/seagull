@@ -115,7 +115,7 @@ ext_modules = [
             'src/util.cpp',
             'src/seagullmesh.cpp',
             'src/mesh.cpp',
-            'src/properties.cpp',
+            # 'src/properties.cpp',
             'src/corefine.cpp',
             # 'src/meshing.cpp',
             'src/locate.cpp',
