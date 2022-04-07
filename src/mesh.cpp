@@ -25,94 +25,6 @@ auto define_simple_type_2(py::module &m, std::string name) {
     ;
 }
 
-
-template<typename Mesh, typename Point, typename V, typename F, typename E, typename H>
-auto define_mesh(py::module &m, std::string name) {
-    return py::class_<Mesh>(m, name.c_str())
-        .def(py::init<>())
-        
-        .def_property_readonly("is_valid", [](const Mesh& mesh) { return mesh.is_valid(false); })
-        .def_property_readonly("n_vertices", [](const Mesh& mesh) { return mesh.number_of_vertices(); })
-        .def_property_readonly("n_faces", [](const Mesh& mesh) { return mesh.number_of_faces(); })
-        .def_property_readonly("n_edges", [](const Mesh& mesh) { return mesh.number_of_edges(); })
-        .def_property_readonly("n_halfedges", [](const Mesh& mesh) { return mesh.number_of_halfedges(); })
-        .def_property_readonly("points", [](const Mesh& mesh) { return mesh.points(); })
-
-        .def_property_readonly("vertices", [](const Mesh& mesh) {
-            std::vector<V> verts;
-            verts.reserve(mesh.number_of_vertices());
-            for (V v : mesh.vertices()) {
-                verts.emplace_back(v);
-            }
-            return verts;
-        })
-        .def_property_readonly("faces", [](const Mesh& mesh) {
-            std::vector<F> faces;
-            faces.reserve(mesh.number_of_faces());
-            for (F f : mesh.faces()) {
-                faces.emplace_back(f);
-            }
-            return faces;
-        })
-        .def_property_readonly("edges", [](const Mesh& mesh) {
-            std::vector<E> edges;
-            edges.reserve(mesh.number_of_edges());
-            for (E e : mesh.edges()) {
-                edges.emplace_back(e);
-            }
-            return edges;
-        })
-        .def_property_readonly("halfedges", [](const Mesh& mesh) {
-            std::vector<H> halfedges;
-            halfedges.reserve(mesh.number_of_halfedges());
-            for (H h : mesh.halfedges()) {
-                halfedges.emplace_back(h);
-            }
-            return halfedges;
-        })
-        .def("edge_vertices", [](const Mesh& mesh, const std::vector<E>& edges) {
-            std::map<V, size_t> vert_idxs;
-            size_t vi = 0;
-            for (V v : mesh.vertices()) {
-                vert_idxs[v] = vi;
-                vi++;
-            }
-
-            const size_t ne = edges.size();
-            py::array_t<size_t, py::array::c_style> verts({ne, size_t(2)});
-            auto r = verts.mutable_unchecked<2>();
-            for (auto i = 0; i < ne; i++) {
-                for (auto j = 0; j < 2; j++) {
-                    r(i, j) = vert_idxs[mesh.vertex(edges[i], j)];
-                }
-            }
-
-            return verts;
-        })
-        .def("expand_selection", [](Mesh& mesh, const std::vector<V>& selected) {
-            std::set<V> expanded;
-            for (V v0 : selected) {
-                expanded.insert(v0);
-                for (V v1 : vertices_around_target(mesh.halfedge(v0), mesh)) {
-                    expanded.insert(v1);
-                }
-            }
-            return expanded;
-        })
-        .def("expand_selection", [](Mesh& mesh, const std::vector<F>& selected) {
-            std::set<F> expanded;
-            for (F f0 : selected) {
-                expanded.insert(f0);
-                for (F f1 : faces_around_face(mesh.halfedge(f0), mesh)) {
-                    expanded.insert(f1);
-                }
-            }
-            return expanded;
-        })
-    ;
-}
-
-
 void init_mesh(py::module &m) {
     py::module sub = m.def_submodule("mesh");
 
@@ -139,14 +51,93 @@ void init_mesh(py::module &m) {
         return mesh;
     });
 
-    // Don't really understand how pybind11, typedefs, and templates interact here
-    // But these serve as both Mesh3 and Mesh2 indices, so don't need to redefine them for Mesh2
     py::class_<V3>(sub, "Vertex");
     py::class_<F3>(sub, "Face");
     py::class_<E3>(sub, "Edge");
     py::class_<H3>(sub, "Halfedge");
 
-    define_mesh<Mesh3, Point3, V3, F3, E3, H3>(sub, "Mesh3")
+    py::class_<Mesh3>(sub, "Mesh3")
+        .def(py::init<>())
+        
+        .def_property_readonly("is_valid", [](const Mesh3& mesh) { return mesh.is_valid(false); })
+        .def_property_readonly("n_vertices", [](const Mesh3& mesh) { return mesh.number_of_vertices(); })
+        .def_property_readonly("n_faces", [](const Mesh3& mesh) { return mesh.number_of_faces(); })
+        .def_property_readonly("n_edges", [](const Mesh3& mesh) { return mesh.number_of_edges(); })
+        .def_property_readonly("n_halfedges", [](const Mesh3& mesh) { return mesh.number_of_halfedges(); })
+        .def_property_readonly("points", [](const Mesh3& mesh) { return mesh.points(); })
+
+        .def_property_readonly("vertices", [](const Mesh3& mesh) {
+            std::vector<V3> verts;
+            verts.reserve(mesh.number_of_vertices());
+            for (V3 v : mesh.vertices()) {
+                verts.emplace_back(v);
+            }
+            return verts;
+        })
+        .def_property_readonly("faces", [](const Mesh3& mesh) {
+            std::vector<F3> faces;
+            faces.reserve(mesh.number_of_faces());
+            for (F3 f : mesh.faces()) {
+                faces.emplace_back(f);
+            }
+            return faces;
+        })
+        .def_property_readonly("edges", [](const Mesh3& mesh) {
+            std::vector<E3> edges;
+            edges.reserve(mesh.number_of_edges());
+            for (E3 e : mesh.edges()) {
+                edges.emplace_back(e);
+            }
+            return edges;
+        })
+        .def_property_readonly("halfedges", [](const Mesh3& mesh) {
+            std::vector<H3> halfedges;
+            halfedges.reserve(mesh.number_of_halfedges());
+            for (H3 h : mesh.halfedges()) {
+                halfedges.emplace_back(h);
+            }
+            return halfedges;
+        })
+
+        .def("edge_vertices", [](const Mesh3& mesh, const std::vector<E3>& edges) {
+            std::map<V3, size_t> vert_idxs;
+            size_t vi = 0;
+            for (V3 v : mesh.vertices()) {
+                vert_idxs[v] = vi;
+                vi++;
+            }
+
+            const size_t ne = edges.size();
+            py::array_t<size_t, py::array::c_style> verts({ne, size_t(2)});
+            auto r = verts.mutable_unchecked<2>();
+            for (auto i = 0; i < ne; i++) {
+                for (auto j = 0; j < 2; j++) {
+                    r(i, j) = vert_idxs[mesh.vertex(edges[i], j)];
+                }
+            }
+
+            return verts;
+        })
+        .def("expand_selection", [](Mesh3& mesh, const std::vector<V3>& selected) {
+            std::set<V3> expanded;
+            for (V3 v0 : selected) {
+                expanded.insert(v0);
+                for (V3 v1 : vertices_around_target(mesh.halfedge(v0), mesh)) {
+                    expanded.insert(v1);
+                }
+            }
+            return expanded;
+        })
+        .def("expand_selection", [](Mesh3& mesh, const std::vector<F3>& selected) {
+            std::set<F3> expanded;
+            for (F3 f0 : selected) {
+                expanded.insert(f0);
+                for (F3 f1 : faces_around_face(mesh.halfedge(f0), mesh)) {
+                    expanded.insert(f1);
+                }
+            }
+            return expanded;
+        })
         .def("to_polygon_soup", [](const Mesh3& mesh) {
             std::vector<Point3> verts;
             std::vector<std::vector<size_t>> faces;
@@ -174,6 +165,7 @@ void init_mesh(py::module &m) {
             }
             return std::make_tuple(verts_out, faces_out);
         })
+
         .def("face_normals", [](const Mesh3& mesh, const std::vector<F3> faces) {
             const size_t nf = faces.size();
             py::array_t<double, py::array::c_style> normals({nf, size_t(3)});

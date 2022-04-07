@@ -85,14 +85,13 @@ From [PMP Corefinement and Boolean Operations](https://doc.cgal.org/latest/Polyg
   - `mesh.intersection(other)`
 
 From the [PMP Location Functions](https://doc.cgal.org/latest/Polygon_mesh_processing/group__PMP__locate__grp.html)
-  - `mesh.aabb_tree()`  TODO point2 maps
+  - `mesh.aabb_tree()`
   - `mesh.locate_points(points, aabb_tree)`
   - `mesh.construct_points(faces, bary_coords)`
 
 From [Triangulated Surface Mesh Shortest Paths
 ](https://doc.cgal.org/latest/Surface_mesh_shortest_path/group__PkgSurfaceMeshShortestPathRef.html)
-  - `mesh.shortest_path(src_vertex, tgt_vertex)`  TODO
-  - `mesh.shortest_path_barycentric(src_face, src_bary_coords, tgt_face, tgt_bary_coords)`
+  - `mesh.shortest_path(src_face, src_bary_coords, tgt_face, tgt_bary_coords)`
 
 From [The Heat Method](https://doc.cgal.org/latest/Heat_method_3/classCGAL_1_1Heat__method__3_1_1Surface__mesh__geodesic__distances__3.html)
   - `mesh.estimate_geodesic_distances(source_vertex_or_vertices)`

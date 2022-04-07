@@ -1,5 +1,4 @@
 - python
-  - Move .mesh to root, no need for submodule
   - docstrings
   - typing?
     - 'string or pmap'
@@ -7,12 +6,9 @@
 - 
 - Mesh
   - refactor common code for vertices, edges, etc
-  
-
-- Properties
-  - Point2 / Point3 property maps
 
 - Before release
+  - try installing in linux 
   - Figure out conda forge
   - Figure out CI
   - Black, ***c++ formatter***, etc

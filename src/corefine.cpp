@@ -54,21 +54,23 @@ void init_corefine(py::module &m) {
         auto params2 = PMP::parameters::edge_is_constrained_map(ecm2);
         PMP::corefine(mesh1, mesh2, params1, params2);
     })
-    .def("difference", [](Mesh3& mesh1, Mesh3& mesh2) {
-        Mesh3 result;
-        bool success = PMP::corefine_and_compute_difference(mesh1, mesh2, result);
+    .def("difference", [](Mesh3& mesh1, Mesh3& mesh2, Mesh3& out) {
+        bool success = PMP::corefine_and_compute_difference(mesh1, mesh2, out);
         if (!success) {
             throw std::runtime_error("Boolean operation failed.");
         }
-        return result;
     })
-    .def("union", [](Mesh3& mesh1, Mesh3& mesh2) {
-        Mesh3 result;
-        bool success = PMP::corefine_and_compute_union(mesh1, mesh2, result);
+    .def("union", [](Mesh3& mesh1, Mesh3& mesh2, Mesh3& out) {
+        bool success = PMP::corefine_and_compute_union(mesh1, mesh2, out);
         if (!success) {
             throw std::runtime_error("Boolean operation failed.");
         }
-        return result;
+    })
+    .def("intersection", [](Mesh3& mesh1, Mesh3& mesh2, Mesh3& out) {
+        bool success = CGAL::Polygon_mesh_processing::corefine_and_compute_intersection(mesh1, mesh2, out);
+        if (!success) {
+            throw std::runtime_error("Boolean operation failed.");
+        }
     })
     .def("union", [](
             Mesh3& mesh1, Mesh3& mesh2,
@@ -81,14 +83,6 @@ void init_corefine(py::module &m) {
         if (!success) {
             throw std::runtime_error("Boolean operation failed.");
         }
-    })
-    .def("intersection", [](Mesh3& mesh1, Mesh3& mesh2) {
-        Mesh3 result;
-        bool success = CGAL::Polygon_mesh_processing::corefine_and_compute_intersection(mesh1, mesh2, result);
-        if (!success) {
-            throw std::runtime_error("Boolean operation failed.");
-        }
-        return result;
     })
     ;
 }

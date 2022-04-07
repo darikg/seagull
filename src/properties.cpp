@@ -117,17 +117,21 @@ void define_array_2_property_map(py::module &m, std::string name) {
 
 template<typename Mesh, typename V, typename F, typename E, typename H>
 void define_mesh_properties(py::module &m, std::string name) {
-    define_property_map        < Mesh, V, bool     >(m, "VertBoolPropertyMap"    + name);
-    define_property_map        < Mesh, V, ssize_t  >(m, "VertIntPropertyMap"     + name);
-    define_array_3_property_map< Mesh, V, Point3   >(m, "VertPoint3PropertyMap"  + name);
-    define_array_3_property_map< Mesh, V, Vector3  >(m, "VertVector3PropertyMap" + name);
-    define_array_2_property_map< Mesh, V, Point2   >(m, "VertPoint2PropertyMap"  + name);
-    define_array_2_property_map< Mesh, V, Vector2  >(m, "VertVector2PropertyMap" + name);
+    define_property_map        < Mesh, V, bool     >(m, "VertBoolPropertyMap"      + name);
+    define_property_map        < Mesh, V, ssize_t  >(m, "VertIntPropertyMap"       + name);
+    define_array_3_property_map< Mesh, V, Point3   >(m, "VertPoint3PropertyMap"    + name);
+    define_array_3_property_map< Mesh, V, Vector3  >(m, "VertVector3PropertyMap"   + name);
+    define_array_2_property_map< Mesh, V, Point2   >(m, "VertPoint2PropertyMap"    + name);
+    define_array_2_property_map< Mesh, V, Vector2  >(m, "VertVector2PropertyMap"   + name);
 
-    define_property_map<         Mesh, F, bool     >(m, "FaceBoolPropertyMap"    + name);
-    define_property_map<         Mesh, F, ssize_t  >(m, "FaceIntPropertyMap"     + name);
-    define_property_map<         Mesh, E, bool     >(m, "EdgeBoolPropertyMap"    + name);
+    define_property_map<         Mesh, F, bool     >(m, "FaceBoolPropertyMap"      + name);
+    define_property_map<         Mesh, F, ssize_t  >(m, "FaceIntPropertyMap"       + name);
 
+    define_property_map<         Mesh, E, bool     >(m, "EdgeBoolPropertyMap"      + name);
+    define_property_map<         Mesh, E, ssize_t  >(m, "EdgeIntPropertyMap"       + name);
+
+    define_property_map<         Mesh, H, bool     >(m, "HalfedgeBoolPropertyMap"  + name);
+    define_property_map<         Mesh, H, ssize_t  >(m, "HalfedgeIntPropertyMap"   + name);
 
 
     m.def("add_vertex_property", &add_property_map<Mesh, V, bool>)
@@ -141,11 +145,15 @@ void define_mesh_properties(py::module &m, std::string name) {
      .def("add_face_property", &add_property_map<Mesh, F, bool>)
      .def("add_face_property", &add_property_map<Mesh, F, ssize_t>)
 
-     .def("add_edge_property", &add_property_map<Mesh, E, bool>);
+     .def("add_edge_property", &add_property_map<Mesh, E, bool>)
+     .def("add_edge_property", &add_property_map<Mesh, E, ssize_t>)
+
+     .def("add_halfedge_property", &add_property_map<Mesh, E, bool>)
+     .def("add_halfedge_property", &add_property_map<Mesh, E, ssize_t>)
+    ;
 }
 
 void init_properties(py::module &m) {
     py::module sub = m.def_submodule("properties");
     define_mesh_properties<Mesh3, V3, F3, E3, H3>(sub, "3");
-    // define_mesh_properties<Mesh2, V2, F2, E2, H2>(sub, "2");
 }
