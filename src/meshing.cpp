@@ -26,7 +26,7 @@ struct VertexPointMapWrapper {
 
     VertexPointMapWrapper(VertPoint& p, VertBool& t) : points(p), touched(t) {}
 
-    friend Point3 get (const VertexPointMapWrapper& map, V3 v) { return map.points[v]; }
+    friend Point3& get (const VertexPointMapWrapper& map, V3 v) { return map.points[v]; }
     friend void put (const VertexPointMapWrapper& map, V3 v, const Point3& point) {
         map.points[v] = point;
         map.touched[v] = true;
