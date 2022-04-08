@@ -47,39 +47,39 @@ auto define_property_map(py::module &m, std::string name) {
 }
 
 
-//template <typename Key, typename Val>
-//void define_array_3_property_map(py::module &m, std::string name) {
-//    using PMap = typename Mesh3::Property_map<Key, Val>;
-//
-//    define_property_map<Key, Val>(m, name)
-//        .def("get_array", [](const PMap& pmap, const std::vector<Key>& keys) {
-//            const size_t nk = keys.size();
-//            py::array_t<double, py::array::c_style> vals({nk, size_t(3)});
-//            auto r = vals.mutable_unchecked<2>();
-//
-//            for (auto i = 0; i < nk; i++) {
-//                auto val = pmap[keys[i]];
-//                for (auto j = 0; j < 3; j++) {
-//                    r(i, j) = val[j];
-//                }
-//            }
-//            return vals;
-//        })
-//        .def("set_array", [](PMap& pmap, const std::vector<Key>& keys, const py::array_t<double>& vals) {
-//            const size_t nk = keys.size();
-//            auto r = vals.unchecked<2>();
-//            if (nk != r.shape(0)) {
-//                throw std::runtime_error("Key and value array sizes do not match");
-//            }
-//            if (3 != r.shape(1)) {
-//                throw std::runtime_error("Expected an array with 3 columns");
-//            }
-//            for (auto i = 0; i < nk; i++) {
-//                pmap[keys[i]] = Val(r(i, 0), r(i, 1), r(i, 2));
-//            }
-//        })
-//    ;
-//}
+template <typename Key, typename Val>
+void define_array_3_property_map(py::module &m, std::string name) {
+    using PMap = typename Mesh3::Property_map<Key, Val>;
+
+    define_property_map<Key, Val>(m, name)
+        .def("get_array", [](const PMap& pmap, const std::vector<Key>& keys) {
+            const size_t nk = keys.size();
+            py::array_t<double, py::array::c_style> vals({nk, size_t(3)});
+            auto r = vals.template mutable_unchecked<2>();
+
+            for (auto i = 0; i < nk; i++) {
+                auto val = pmap[keys[i]];
+                for (auto j = 0; j < 3; j++) {
+                    r(i, j) = val[j];
+                }
+            }
+            return vals;
+        })
+        .def("set_array", [](PMap& pmap, const std::vector<Key>& keys, const py::array_t<double>& vals) {
+            const size_t nk = keys.size();
+            auto r = vals.unchecked<2>();
+            if (nk != r.shape(0)) {
+                throw std::runtime_error("Key and value array sizes do not match");
+            }
+            if (3 != r.shape(1)) {
+                throw std::runtime_error("Expected an array with 3 columns");
+            }
+            for (auto i = 0; i < nk; i++) {
+                pmap[keys[i]] = Val(r(i, 0), r(i, 1), r(i, 2));
+            }
+        })
+    ;
+}
 
 //template <typename Key, typename Val>
 //void define_array_2_property_map(py::module &m, std::string name) {
@@ -118,7 +118,7 @@ auto define_property_map(py::module &m, std::string name) {
 
 void init_properties(py::module &m) {
     py::module sub = m.def_submodule("properties");
-    //    define_array_3_property_map< Mesh, V, Point3   >(m, "VertPoint3PropertyMap"    + name);
+    define_array_3_property_map<V3, Point3   >(m, "VertPoint3PropertyMap");
     //    define_array_3_property_map< Mesh, V, Vector3  >(m, "VertVector3PropertyMap"   + name);
     //    define_array_2_property_map< Mesh, V, Point2   >(m, "VertPoint2PropertyMap"    + name);
     //    define_array_2_property_map< Mesh, V, Vector2  >(m, "VertVector2PropertyMap"   + name);
