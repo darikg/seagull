@@ -3,10 +3,10 @@ import os
 
 from tempfile import TemporaryDirectory
 import numpy as np
-from numpy import array, cos, sin,  pi, ones, arange, uint64
+from numpy import array, cos, sin,  pi, ones, arange, uint64, zeros
 from numpy.testing import assert_array_equal
 
-from skgeom._skgeom.surface_mesh import Mesh
+from skgeom._skgeom.surface_mesh import Mesh3
 
 
 def tetrahedron(scale=1.0, rot_z=0.0):
@@ -36,13 +36,16 @@ def tetrahedron(scale=1.0, rot_z=0.0):
 
 
 def make_mesh():
-    m = Mesh(*tetrahedron(), True)
+    m = Mesh3(*tetrahedron(), True)
     m.add_edge_property('corefined_idx', False)
     return m
 
 
 mesh = make_mesh()
-# mesh = Mesh(*tetrahedron(), True)
-# pmap = mesh.add_edge_property('corefined_idx', False)
-pmap = mesh.get_edge_property('corefined_idx')
-print(pmap[mesh.edges])
+print(mesh.expand_selection(mesh.vertices[:2]))
+# tree = mesh.aabb_tree()
+# face_idx, bary_coords = mesh.locate_with_aabb_tree(tree, zeros((1, 3)))
+# # mesh = Mesh(*tetrahedron(), True)
+# # pmap = mesh.add_edge_property('corefined_idx', False)
+# pmap = mesh.get_edge_property('corefined_idx')
+# print(pmap[mesh.edges])
