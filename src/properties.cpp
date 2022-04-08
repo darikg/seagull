@@ -23,7 +23,7 @@ auto define_property_map(py::module &m, std::string name) {
         .def("__getitem__", [](const PMap& pmap, const std::vector<Key>& keys) {
             size_t nk = keys.size();
             py::array_t<Val, py::array::c_style> vals({nk});
-            auto r = vals.mutable_unchecked<Val, 1>();
+            auto r = vals.template mutable_unchecked<1>();
 
             for (size_t i = 0; i < nk; i++) {
                 r(i) = pmap[keys[i]];
