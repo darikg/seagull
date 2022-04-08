@@ -22,7 +22,7 @@ auto define_property_map(py::module &m, std::string name) {
         })
         .def("__getitem__", [](const PMap& pmap, const std::vector<Key>& keys) {
             size_t nk = keys.size();
-            py::array_t<Val, py::array::c_style> vals({nk});
+            py::array_t<Val, py::array::c_style> vals({int(nk)});
             auto r = vals.template mutable_unchecked<1>();
 
             for (size_t i = 0; i < nk; i++) {
@@ -32,6 +32,11 @@ auto define_property_map(py::module &m, std::string name) {
         })
         .def("__setitem__", [](PMap& pmap, const Key& key, const Val val) {
             pmap[key] = val;
+        })
+        .def("__setitem__", [](PMap& pmap, const std::vector<Key>& keys, const Val val) {
+            for (Key key : keys) {
+                pmap[key] = val;
+            }
         })
         .def("__setitem__", [](PMap& pmap, const std::vector<Key>& keys, const std::vector<Val>& vals) {
             size_t nk = keys.size();
@@ -119,32 +124,40 @@ void define_array_2_property_map(py::module &m, std::string name) {
 void init_properties(py::module &m) {
     py::module sub = m.def_submodule("properties");
 
-    define_property_map<V3, bool     >(sub, "VertBoolPropertyMap");
-    define_property_map<V3, ssize_t  >(sub, "VertIntPropertyMap");
-    define_property_map<F3, bool     >(sub, "FaceBoolPropertyMap");
-    define_property_map<F3, ssize_t  >(sub, "FaceIntPropertyMap");
-    define_property_map<E3, bool     >(sub, "EdgeBoolPropertyMap");
-    define_property_map<E3, ssize_t  >(sub, "EdgeIntPropertyMap");
-    define_property_map<H3, bool     >(sub, "HalfedgeBoolPropertyMap");
-    define_property_map<H3, ssize_t  >(sub, "HalfedgeIntPropertyMap");
+    define_property_map<V3, bool    >(sub, "VertBoolPropertyMap");
+    define_property_map<V3, ssize_t >(sub, "VertIntPropertyMap");
+    define_property_map<V3, double  >(sub, "VertDoublePropertyMap");
+    define_property_map<F3, bool    >(sub, "FaceBoolPropertyMap");
+    define_property_map<F3, ssize_t >(sub, "FaceIntPropertyMap");
+    define_property_map<F3, double  >(sub, "FaceDoublePropertyMap");
+    define_property_map<E3, bool    >(sub, "EdgeBoolPropertyMap");
+    define_property_map<E3, ssize_t >(sub, "EdgeIntPropertyMap");
+    define_property_map<E3, double  >(sub, "EdgeDoublePropertyMap");
+    define_property_map<H3, bool    >(sub, "HalfedgeBoolPropertyMap");
+    define_property_map<H3, ssize_t >(sub, "HalfedgeIntPropertyMap");
+    define_property_map<H3, double  >(sub, "HalfedgeDoublePropertyMap");
 
-    define_array_3_property_map<V3, Point3   >(m, "VertPoint3PropertyMap");
-    define_array_3_property_map<V3, Vector3  >(m, "VertVector3PropertyMap");
-    define_array_2_property_map<V3, Point2   >(m, "VertPoint2PropertyMap");
-    define_array_2_property_map<V3, Vector2  >(m, "VertVector2PropertyMap");
+    define_array_3_property_map<V3, Point3  >(sub, "VertPoint3PropertyMap");
+    define_array_3_property_map<V3, Vector3 >(sub, "VertVector3PropertyMap");
+    define_array_2_property_map<V3, Point2  >(sub, "VertPoint2PropertyMap");
+    define_array_2_property_map<V3, Vector2 >(sub, "VertVector2PropertyMap");
 
     sub
      .def("add_vertex_property",   &add_property_map<V3, bool>)
      .def("add_vertex_property",   &add_property_map<V3, ssize_t>)
+     .def("add_vertex_property",   &add_property_map<V3, double>)
      .def("add_vertex_property",   &add_property_map<V3, Point3>)
      .def("add_vertex_property",   &add_property_map<V3, Vector3>)
      .def("add_vertex_property",   &add_property_map<V3, Point2>)
      .def("add_vertex_property",   &add_property_map<V3, Vector2>)
      .def("add_face_property",     &add_property_map<F3, bool>)
      .def("add_face_property",     &add_property_map<F3, ssize_t>)
+     .def("add_face_property",     &add_property_map<F3, double>)
      .def("add_edge_property",     &add_property_map<E3, bool>)
      .def("add_edge_property",     &add_property_map<E3, ssize_t>)
+     .def("add_edge_property",     &add_property_map<E3, double>)
      .def("add_halfedge_property", &add_property_map<H3, bool>)
      .def("add_halfedge_property", &add_property_map<H3, ssize_t>)
+     .def("add_halfedge_property", &add_property_map<H3, double>)
     ;
 }

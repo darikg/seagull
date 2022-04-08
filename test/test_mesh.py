@@ -8,8 +8,8 @@ import numpy as np
 from numpy import array, cos, sin,  pi, ones, arange, uint64, full, zeros
 from numpy.testing import assert_array_equal
 
-from seagullmesh import Mesh3, MeshData
-
+from seagullmesh import sgm, Mesh3, MeshData, Point2
+props = sgm.properties
 
 def tetrahedron(scale=1.0, rot_z=0.0):
     verts = scale * array([[1, 1, 1], [-1, 1, -1], [1, -1, -1], [-1, -1, 1]], dtype='float')
@@ -29,7 +29,7 @@ def test_from_polygon_soup():
 
 
 @pytest.mark.parametrize('file', ['armadillo.off', 'sphere.ply'])
-def test_from_ply(file):
+def test_from_file(file):
     file = Path(__file__).parent / 'assets' / file
     assert file.exists()
     mesh = Mesh3.from_file(str(file))
@@ -50,8 +50,24 @@ def test_pyvista_roundtrip():
     pvmesh1 = mesh.to_pyvista()
 
 
+@pytest.mark.parametrize(
+    ['cls', 'default'],
+    [
+        (props.VertBoolPropertyMap, False),
+        (props.VertIntPropertyMap, 0),
+        (props.VertDoublePropertyMap, 0.0),
+        (props.VertPoint2PropertyMap, Point2(0, 0)),
+    ]
+)
+def test_property_map_type_casting(cls, default):
+    mesh = Mesh3.from_polygon_soup(*tetrahedron())
+    d = mesh.vertex_data
+    pmap = d.add_property('foo', default=default)
+    assert isinstance(pmap.pmap, cls)
+
+
 @pytest.mark.parametrize('key_type', ['vertex', 'face', 'edge', 'halfedge'])
-@pytest.mark.parametrize('val_type', [int, bool])
+@pytest.mark.parametrize('val_type', [int, bool, float])
 def test_scalar_properties(key_type, val_type):
     mesh = Mesh3.from_polygon_soup(*tetrahedron())
     d: MeshData = getattr(mesh, key_type + '_data')
@@ -88,3 +104,20 @@ def test_corefine():
 def test_boolean_ops(op, inplace):
     m1, m2 = corefine_meshes()
     m3 = getattr(m1, op)(m2, inplace=inplace)
+
+
+@pytest.fixture()
+def armadillo():
+    file = Path(__file__).parent / 'assets' / 'armadillo.off'
+    assert file.exists()
+    return Mesh3.from_file(str(file))
+
+
+def test_estimate_geodesic_distance_source_vert(armadillo):
+    armadillo.estimate_geodesic_distances(armadillo.vertices[0], 'distances')
+    assert (armadillo.vertex_data['distances'] > 0).any()
+
+
+def test_estimate_geodesic_distance_source_verts(armadillo):
+    armadillo.estimate_geodesic_distances(armadillo.vertices[:3], 'distances')
+    assert (armadillo.vertex_data['distances'] > 0).any()

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Optional, TYPE_CHECKING, Union, Sequence, Protocol, TypeVar, overload, Tuple
+from typing import Any, Optional, TYPE_CHECKING, Union, Sequence, Protocol, TypeVar, overload, Tuple, Generic, List
 
 from numpy import ndarray, zeros_like, array, sqrt, concatenate, ones
 from seagullmesh._seagullmesh.mesh import (  # noqa
@@ -255,7 +255,8 @@ class Mesh3:
 
     def lscm(self, uv_map: Union[str, UvMap]):
         """Performs least-squares conformal mapping"""
-        uv_map = self.vertex_data.get_or_create_property(uv_map, default=Point2(0, 0))
+        if isinstance(uv_map, str):
+            uv_map = self.vertex_data.get_or_create_property(uv_map, default=Point2(0, 0))
         sgm.parametrize.lscm(self._mesh, uv_map)
 
     def arap(self, uv_map: Union[str, UvMap]):
@@ -273,7 +274,7 @@ class Mesh3:
         Estimated distances are stored in the supplied vertex property map.
         """
         distances = self.vertex_data.get_or_create_property(distance_prop, default=0.0)
-        self._mesh.estimate_geodesic_distances(distances, src)
+        self._mesh.estimate_geodesic_distances(distances.pmap, src)
 
 
 def _get_corefined_properties(mesh1: Mesh3, mesh2: Mesh3, vert_idx: str, edge_constrained: str):
@@ -289,29 +290,68 @@ Key = TypeVar('Key', Vertex, Face, Edge, Halfedge)
 Val = TypeVar('Val', int, bool, Point2, Point3, Vector2, Vector3)
 
 
-class PropertyMap(Protocol[Key, Val]):
-    @overload
-    def __getitem__(self, item: Key) -> Val: ...
+class PropertyMap(Generic[Key, Val]):
+    def __init__(self, pmap, data: MeshData):
+        self.pmap = pmap  # the C++ object
+        self._data = data
 
     @overload
-    def __getitem__(self, item: Sequence[Key]) -> Sequence[Val]: ...
-
-    def __getitem__(self, item): ...
+    def __getitem__(self, key: Union[int, Key]) -> Val: ...
 
     @overload
-    def __setitem__(self, key: Key, value: Val): ...
+    def __getitem__(self, key: Union[A, Sequence[Key], slice]) -> Sequence[Val]: ...
 
-    @overload
-    def __setitem__(self, key: Sequence[Key], value: Sequence[Val]): ...
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            return self.pmap[self._data.mesh_keys[key]]
+        else:
+            # If it's a Key or Sequence[Key] the C++ property handles the indexing
+            try:
+                return self.pmap[key]
+            except TypeError:
+                # Let numpy handle the indexing
+                return self.pmap[array(self._data.mesh_keys)[key]]
 
-    def __setitem__(self, key, item): ...
+    def __setitem__(self, key, val):
+        if isinstance(key, slice):
+            self.pmap[self._data.mesh_keys[key]] = val
+        else:
+            try:
+                self.pmap[key] = val
+            except TypeError:
+                self.pmap[array(self._data.mesh_keys)[key]] = val
+
+    def all_values(self):
+        return self.pmap[self._data.mesh_keys]
+
+    for dunder in (
+            '__add__',
+            '__eq__',
+            '__ge__',
+            '__gt__',
+            '__le__',
+            '__lt__',
+            '__mul__',
+            '__ne__',
+            '__neg__',
+            '__pos__',
+            '__pow__',
+            '__mod__',
+    ):
+        def _dunder_impl(self, other, _dunder=dunder):
+            if isinstance(other, PropertyMap):
+                other = other.all_values()
+            fn = getattr(self.all_values(), _dunder)
+            return fn(other)
+
+        locals()[dunder] = _dunder_impl
 
 
 VertexPointMap = PropertyMap[Vertex, Union[Point2, Point3]]
 UvMap = PropertyMap[Vertex, Point2]
 
 
-class MeshData:
+class MeshData(Generic[Key]):
     def __init__(self, mesh: Mesh3, add_fn, key_name: str):
         self._data = {}
         self._mesh = mesh
@@ -319,30 +359,28 @@ class MeshData:
         self._key_name = key_name
 
     @property
-    def mesh_keys(self):
+    def mesh_keys(self) -> List[Key]:
         return getattr(self._mesh, self._key_name)
 
     @property
     def n_mesh_keys(self) -> int:
         return getattr(self._mesh, f'n_{self._key_name}')
 
-    def add_property(self, key: str, default: Any):
-        pmap = self._add_fn(self._mesh, key, default)
-        self._data[key] = pmap
+    def add_property(self, key: str, default: Val) -> PropertyMap[Key, Val]:
+        _pmap = self._add_fn(self._mesh, key, default)
+        pmap = self._data[key] = PropertyMap(_pmap, self)
         return pmap
 
-    def get_or_create_property(self, key: Union[str, PropertyMap], default: Optional[Any] = None):
-        if not isinstance(key, str):
-            return key  # assume it's a property map
+    def get_or_create_property(self, key: Union[str, PropertyMap[Key, Val]], default: Val) -> PropertyMap[Key, Val]:
+        if isinstance(key, PropertyMap):
+            return key
 
         if key in self._data:
             return self._data[key]
         else:
-            pmap = self._add_fn(self._mesh, key, default)
-            self._data[key] = pmap
-            return pmap
+            return self.add_property(key, default)
 
-    def __getitem__(self, item: str):
+    def __getitem__(self, item: str) -> PropertyMap[Key, Any]:
         return self._data[item]
 
     def __setitem__(self, key: str, value: ndarray):
