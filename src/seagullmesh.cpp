@@ -11,7 +11,7 @@ void init_meshing(py::module&);
 
 PYBIND11_MODULE(_seagullmesh, m) {
     m.doc() = "";
-    init_mesh(m);
+    // init_mesh(m);
     // init_properties(m);
     // init_corefine(m);
     init_meshing(m);
