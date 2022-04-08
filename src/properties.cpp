@@ -130,7 +130,7 @@ void init_properties(py::module &m) {
 
     define_array_3_property_map<V3, Point3   >(m, "VertPoint3PropertyMap");
     define_array_3_property_map<V3, Vector3  >(m, "VertVector3PropertyMap");
-    define_array_2_property_map<V3, Point2   >(m, "VertPoint2PropertyMap"e);
+    define_array_2_property_map<V3, Point2   >(m, "VertPoint2PropertyMap");
     define_array_2_property_map<V3, Vector2  >(m, "VertVector2PropertyMap");
 
     sub
