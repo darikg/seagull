@@ -475,6 +475,19 @@ void init_mesh(py::module &m) {
 
             return expanded;
         })
+        .def("expand_selection", [](Mesh3& mesh, const std::vector<F3>& selected) {
+            std::set<F3> expanded;
+
+            for (F3 f0 : selected) {
+                expanded.insert(f0);
+
+                for (F3 f1 : faces_around_face(mesh.halfedge(f0), mesh)) {
+                    expanded.insert(f1);
+                }
+            }
+
+            return expanded;
+        })
         .def("fair", [](Mesh3& mesh, const std::vector<V3>& verts, unsigned int continuity) {
             // A value controling the tangential continuity of the output surface patch.
             // The possible values are 0, 1 and 2, refering to the C0, C1 and C2 continuity.
