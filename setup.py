@@ -116,7 +116,7 @@ ext_modules = [
             'src/mesh.cpp',
             'src/properties.cpp',
             # 'src/corefine.cpp',
-            'src/meshing.cpp',
+            # 'src/meshing.cpp',
             # 'src/locate.cpp',
         ],
         include_dirs=include_dirs,
