@@ -90,6 +90,7 @@ void define_mesh_properties(py::module &m, std::string name) {
     define_property_map<Mesh, E, bool>(m, "EdgeBoolPropertyMap" + name);
 
     define_array3_property_map<Mesh, V, Point_3>(m, "VertPoint3PropertyMap" + name);
+    define_array3_property_map<Mesh, V, Vector3>(m, "VertVector3PropertyMap" + name);
 
     m.def("add_vertex_property", &add_property_map<Mesh, V, bool>)
      .def("add_vertex_property", &add_property_map<Mesh, V, ssize_t>)

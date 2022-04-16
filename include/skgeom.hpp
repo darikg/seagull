@@ -16,6 +16,8 @@ typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
 
 typedef Kernel::Point_2                             Point_2;
 typedef Kernel::Point_3                             Point_3;
+typedef Kernel::Vector_2                            Vector2;
+typedef Kernel::Vector_3                            Vector3;
 
 typedef CGAL::Surface_mesh<Point_3>                 Mesh3;
 typedef Mesh3::Vertex_index                         V3;
