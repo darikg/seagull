@@ -13,7 +13,7 @@ from seagullmesh._seagullmesh.mesh import (  # noqa
 from seagullmesh import _seagullmesh as sgm
 
 if TYPE_CHECKING:
-    import pyvista as pv  # noqa
+    import pyvista as pv  # noqa 
 
 A = ndarray
 
