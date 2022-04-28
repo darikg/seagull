@@ -8,7 +8,7 @@ std::vector<Point3> array_to_points_3(const py::array_t<double> &verts) {
     const ssize_t nv = v.shape(0);
     std::vector<Point3> points;
     points.reserve(nv);
-    for (ssize_t i = 0; i < nv; i++) {
+    for (size_t i = 0; i < nv; i++) {
         points.emplace_back(Point3(v(i, 0), v(i, 1), v(i, 2)));
     }
     return points;
@@ -22,7 +22,7 @@ std::vector<Point2> array_to_points_2(const py::array_t<double> &verts) {
     const ssize_t nv = v.shape(0);
     std::vector<Point2> points;
     points.reserve(nv);
-    for (ssize_t i = 0; i < nv; i++) {
+    for (size_t i = 0; i < nv; i++) {
         points.emplace_back(Point2(v(i, 0), v(i, 1)));
     }
     return points;
@@ -33,8 +33,8 @@ py::array_t<double, py::array::c_style> points_d_to_array(const std::vector<Poin
     const size_t np = points.size();
     py::array_t<double, py::array::c_style> points_out({np, ndims});
     auto r = points_out.mutable_unchecked<2>();
-    for (auto i = 0; i < np; i++) {
-        for (auto j = 0; j < ndims; j++) {
+    for (size_t i = 0; i < np; i++) {
+        for (size_t j = 0; j < ndims; j++) {
             r(i, j) = CGAL::to_double(points[i][j]);
         }
     }
