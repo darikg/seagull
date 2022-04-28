@@ -14,24 +14,24 @@ typedef Mesh3::Property_map<V3, Point3>     VertPoint;
 typedef Mesh3::Property_map<V3, bool>       VertBool;
 
 
-struct VertexPointMapWrapper {
-    // Used for tracking which verts get moved during remesh, etc
-    using key_type = V3;
-    using value_type = Point3;
-    using reference = Point3&;
-    using category = boost::read_write_property_map_tag;
-
-    VertPoint& points;
-    VertBool& touched;
-
-    VertexPointMapWrapper(VertPoint& p, VertBool& t) : points(p), touched(t) {}
-
-    friend Point3 get (const VertexPointMapWrapper& map, V3 v) { return map.points[v]; }
-    friend void put (const VertexPointMapWrapper& map, V3 v, const Point3& point) {
-        map.points[v] = point;
-        map.touched[v] = true;
-    }
-};
+//struct VertexPointMapWrapper {
+//    // Used for tracking which verts get moved during remesh, etc
+//    using key_type = V3;
+//    using value_type = Point3;
+//    using reference = Point3&;
+//    using category = boost::read_write_property_map_tag;
+//
+//    VertPoint& points;
+//    VertBool& touched;
+//
+//    VertexPointMapWrapper(VertPoint& p, VertBool& t) : points(p), touched(t) {}
+//
+//    friend Point3 get (const VertexPointMapWrapper& map, V3 v) { return map.points[v]; }
+//    friend void put (const VertexPointMapWrapper& map, V3 v, const Point3& point) {
+//        map.points[v] = point;
+//        map.touched[v] = true;
+//    }
+//};
 
 
 void init_meshing(py::module &m) {
@@ -40,18 +40,18 @@ void init_meshing(py::module &m) {
             auto params = PMP::parameters::number_of_iterations(n_iter).protect_constraints(protect_constraints);
             PMP::isotropic_remeshing(faces, target_edge_length, mesh, params);
         })
-        .def("remesh", [](Mesh3& mesh, const Faces& faces, double target_edge_length, unsigned int n_iter,                        
-                        const bool protect_constraints, VertBool& touched) {
-            
-            auto points = mesh.points();
-            VertexPointMapWrapper point_map = VertexPointMapWrapper(points, touched);
-            auto params = PMP::parameters::number_of_iterations(n_iter)
-                .vertex_point_map(point_map)
-                .protect_constraints(protect_constraints)
-            ;
-
-            PMP::isotropic_remeshing(faces, target_edge_length, mesh, params);
-        })
+//        .def("remesh", [](Mesh3& mesh, const Faces& faces, double target_edge_length, unsigned int n_iter,
+//                        const bool protect_constraints, VertBool& touched) {
+//
+//            auto points = mesh.points();
+//            VertexPointMapWrapper point_map = VertexPointMapWrapper(points, touched);
+//            auto params = PMP::parameters::number_of_iterations(n_iter)
+//                .vertex_point_map(point_map)
+//                .protect_constraints(protect_constraints)
+//            ;
+//
+//            PMP::isotropic_remeshing(faces, target_edge_length, mesh, params);
+//        })
         .def("fair", [](Mesh3& mesh, const Verts& verts, const unsigned int fairing_continuity) {
             // A value controling the tangential continuity of the output surface patch.
             // The possible values are 0, 1 and 2, refering to the C0, C1 and C2 continuity.
